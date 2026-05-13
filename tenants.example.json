@@ -1,0 +1,8 @@
+{
+  "tenants": {
+    "ou_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx": {
+      "api_key": "sk_ou_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "storage_path": "./storage/tenant-ou_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    }
+  }
+}

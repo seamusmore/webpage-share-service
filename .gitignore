@@ -1,0 +1,7 @@
+storage/
+data/tenants.json
+logs/
+.env
+*.backup.*
+*.log
+.swp

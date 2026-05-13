@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>页面列表 - 内部网页服务</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .header {
+      background: white; border-radius: 16px; padding: 32px;
+      margin-bottom: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    .header h1 { color: #1f2937; font-size: 28px; margin-bottom: 8px; }
+    .header p { color: #6b7280; font-size: 14px; }
+    .nav { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; align-items: center; }
+    .nav a, .nav label, .nav button {
+      padding: 10px 20px; background: #667eea; color: white;
+      text-decoration: none; border-radius: 8px; font-size: 14px;
+      transition: background 0.2s; cursor: pointer; display: inline-block; border: none;
+    }
+    .nav a:hover, .nav label:hover, .nav button:hover { background: #5568d3; }
+    #file-input { display: none; }
+    .upload-btn { background: #10b981; }
+    .upload-btn:hover { background: #059669; }
+    .logout-btn { background: #ef4444; margin-left: auto; }
+    .logout-btn:hover { background: #dc2626; }
+    .user-info { color: #6b7280; font-size: 13px; margin-left: 12px; }
+    .pages-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;
+    }
+    .page-card {
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+      border: 1px solid rgba(102, 126, 234, 0.1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .page-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+    .page-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 40px rgba(102, 126, 234, 0.25);
+    }
+    .page-card:hover::before {
+      transform: scaleX(1);
+    }
+    .page-card h3 {
+      color: #1f2937;
+      font-size: 18px;
+      margin-bottom: 8px;
+      word-break: break-all;
+      font-weight: 600;
+    }
+    .page-card p {
+      color: #9ca3af;
+      font-size: 13px;
+      margin-bottom: 20px;
+      font-family: 'Monaco', 'Consolas', monospace;
+    }
+    .page-card .actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .page-card .actions a {
+      flex: 1;
+      display: inline-block;
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    }
+    .page-card .actions a:hover {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+      transform: translateY(-1px);
+    }
+    .page-card .actions .delete-btn,
+    .page-card .actions .share-btn {
+      flex: 0 0 44px;
+      width: 44px;
+      height: 42px;
+      padding: 0;
+      border: 1px solid;
+      border-radius: 10px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .page-card .actions .delete-btn {
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%) !important;
+      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+    .page-card .actions .delete-btn:hover {
+      background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%) !important;
+      border-color: rgba(239, 68, 68, 0.4);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+      transform: translateY(-1px);
+    }
+    .page-card .actions .share-btn {
+      background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%) !important;
+      color: #4a78d9;
+      border-color: rgba(74, 120, 217, 0.2);
+    }
+    .page-card .actions .share-btn:hover {
+      background: linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 100%) !important;
+      border-color: rgba(74, 120, 217, 0.4);
+      box-shadow: 0 4px 12px rgba(74, 120, 217, 0.25);
+      transform: translateY(-1px);
+    }
+    .empty-state {
+      background: white;
+      border-radius: 16px;
+      padding: 60px 40px;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+    .empty-state .icon { font-size: 64px; margin-bottom: 16px; }
+    .empty-state h2 { color: #1f2937; font-size: 20px; margin-bottom: 8px; }
+    .empty-state p { color: #6b7280; font-size: 14px; }
+    .toast {
+      position: fixed; bottom: 20px; right: 20px;
+      padding: 16px 24px; border-radius: 12px; color: white;
+      font-size: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+      z-index: 1000; transform: translateY(100px); opacity: 0;
+      transition: transform 0.3s, opacity 0.3s;
+      font-weight: 500;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    .toast.error { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+    .user-info { padding: 10px 20px; background: #f3f4f6; border-radius: 8px; font-size: 14px; color: #1f2937; display: flex; align-items: center; gap: 8px; }
+    .user-info img { width: 24px; height: 24px; border-radius: 50%; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1>📄 页面列表</h1>
+        <div class="nav" style="margin: 0;">
+          <span id="user-info" class="user-info" style="display:none;"></span>
+          <button id="apikey-btn" style="display:none; background: #667eea; color: white; border: none; border-radius: 8px; padding: 10px 20px; font-size: 14px; cursor: pointer; transition: background 0.2s;"
+            onmouseover="this.style.background='#5568d3'" onmouseout="this.style.background='#667eea'">🔑 API Key</button>
+          <button id="logout-btn" class="logout-btn" style="display:none;">🚪 退出登录</button>
+          <label for="file-input" class="upload-btn">📤 上传 HTML</label>
+          <input type="file" id="file-input" accept=".html,.htm">
+        </div>
+      </div>
+
+    </div>
+    <div id="pages-container" class="pages-grid"></div>
+  </div>
+  <div id="toast" class="toast"></div>
+
+  <!-- API Key 管理弹窗 -->
+  <div id="apikey-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+    <div style="background:white; border-radius:16px; padding:32px; max-width:480px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.3); position:relative;">
+      <button id="close-apikey-modal" style="position:absolute; top:16px; right:16px; background:none; border:none; font-size:20px; cursor:pointer; color:#64748b; line-height:1; padding:4px;">✕</button>
+      <h2 style="color:#1f2937; font-size:20px; margin-bottom:24px; font-weight:600;">🔧 配置信息</h2>
+      <div style="display:grid; gap:16px;">
+        <div>
+          <label style="display:block; color:#64748b; font-size:12px; margin-bottom:6px; font-weight:500;">租户 ID</label>
+          <code id="modal-tenant-id" style="background:#f8fafc; padding:10px 12px; border-radius:8px; display:block; color:#0f172a; font-size:13px; word-break:break-all; border:1px solid #e2e8f0; font-family:monospace;">加载中...</code>
+        </div>
+        <div>
+          <label style="display:block; color:#64748b; font-size:12px; margin-bottom:6px; font-weight:500;">API_KEY <button id="toggle-modal-apikey" style="background:none; border:none; cursor:pointer; font-size:14px; padding:0 4px;" title="显示/隐藏">👁️</button></label>
+          <div style="display:flex; gap:8px; align-items:stretch;">
+            <code id="modal-api-key" style="background:#f8fafc; padding:10px 12px; border-radius:8px; display:block; color:#0f172a; font-size:13px; word-break:break-all; border:1px solid #e2e8f0; flex:1; font-family:monospace;" data-is-masked="true">加载中...</code>
+            <button id="copy-apikey-btn" style="background:#667eea; color:white; border:none; border-radius:8px; padding:10px 16px; font-size:14px; cursor:pointer; white-space:nowrap; transition:background 0.2s;"
+              onmouseover="this.style.background='#5568d3'" onmouseout="this.style.background='#667eea'">📋 拷贝</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let isLoggedIn = false;
+    let currentUser = null;
+    let currentApiKey = null;
+    
+    // 强制登录检查 - 未登录重定向到首页（带原页面地址）
+    async function forceAuth() {
+      try {
+        const res = await fetch('/api/check');
+        const data = await res.json();
+        if (!data.authenticated) {
+          // 未登录，重定向到首页，带上原页面地址
+          const currentPath = window.location.pathname;
+          window.location.href = '/?redirect=' + encodeURIComponent(currentPath);
+          return false;
+        }
+        return true;
+      } catch (err) {
+        const currentPath = window.location.pathname;
+        window.location.href = '/?redirect=' + encodeURIComponent(currentPath);
+        return false;
+      }
+    }
+    
+    // 检查登录状态
+    async function checkLogin() {
+      try {
+        const res = await fetch('/api/check');
+        const data = await res.json();
+        if (data.authenticated) {
+          isLoggedIn = true;
+          currentUser = data.user;
+          showLoggedInUI(currentUser);
+        } else {
+          isLoggedIn = false;
+          showLoggedOutUI();
+        }
+      } catch (err) {
+        console.error('检查登录状态失败:', err);
+        showLoggedOutUI();
+      }
+    }
+    
+    async function showLoggedInUI(user) {
+      const userInfo = document.getElementById('user-info');
+      userInfo.style.display = 'inline-block';
+      userInfo.innerHTML = `👤 ${user.name}`;
+      document.getElementById('file-input').disabled = false;
+      document.getElementById('apikey-btn').style.display = 'inline-block';
+      document.getElementById('logout-btn').style.display = 'inline-block';
+      
+      // 加载配置信息（等待 API_KEY 加载完成）
+      await loadConfigInfo(user);
+      
+      // 加载页面列表
+      loadPages();
+    }
+    
+    function showLoggedOutUI() {
+      document.getElementById('user-info').style.display = 'none';
+      document.getElementById('file-input').disabled = true;
+      document.getElementById('apikey-btn').style.display = 'none';
+      document.getElementById('logout-btn').style.display = 'none';
+    }
+    
+    // 退出登录
+
+    // API Key 弹窗
+    document.getElementById('apikey-btn')?.addEventListener('click', () => {
+      document.getElementById('apikey-modal').style.display = 'flex';
+    });
+    document.getElementById('close-apikey-modal')?.addEventListener('click', () => {
+      document.getElementById('apikey-modal').style.display = 'none';
+    });
+    document.getElementById('apikey-modal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'apikey-modal') {
+        document.getElementById('apikey-modal').style.display = 'none';
+      }
+    });
+
+    // 拷贝 API_KEY
+    document.getElementById('copy-apikey-btn')?.addEventListener('click', async () => {
+      const apiKeyEl = document.getElementById('modal-api-key');
+      const apiKey = apiKeyEl.dataset.isMasked === 'true' ? apiKeyEl.dataset.fullKey : apiKeyEl.textContent;
+      if (!apiKey || apiKey === '加载中...' || apiKey === '加载失败') {
+        showToast('暂无可拷贝的 API_KEY', 'error');
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(apiKey);
+        showToast('✅ API_KEY 已拷贝到剪贴板', 'success');
+      } catch (err) {
+        const textarea = document.createElement('textarea');
+        textarea.value = apiKey;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          showToast('✅ API_KEY 已拷贝到剪贴板', 'success');
+        } catch (fallbackErr) {
+          showToast('❌ 拷贝失败，请手动复制', 'error');
+        }
+        document.body.removeChild(textarea);
+      }
+    });
+
+    // 切换 API_KEY 显示/隐藏
+    document.getElementById('toggle-modal-apikey')?.addEventListener('click', function() {
+      const apiKeyEl = document.getElementById('modal-api-key');
+      if (apiKeyEl.dataset.isMasked === 'true') {
+        apiKeyEl.textContent = apiKeyEl.dataset.fullKey;
+        this.textContent = '🙈';
+        apiKeyEl.dataset.isMasked = 'false';
+      } else {
+        apiKeyEl.textContent = apiKeyEl.dataset.maskedKey;
+        this.textContent = '👁️';
+        apiKeyEl.dataset.isMasked = 'true';
+      }
+    });
+
+    document.getElementById('logout-btn')?.addEventListener('click', async () => {
+      try {
+        await fetch('/api/logout', { method: 'POST' });
+        showToast('已退出登录', 'success');
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 500);
+      } catch (err) {
+        showToast('退出登录失败', 'error');
+      }
+    });
+    
+    // 获取登录 URL（带当前页面地址）
+    async function getLoginUrl() {
+      try {
+        // 保存当前页面路径，登录后跳回这里
+        const currentPage = window.location.pathname;
+        localStorage.setItem('login_redirect_url', currentPage);
+        
+        // 传递给后端 redirect 参数
+        const res = await fetch('/api/login-url?redirect=' + encodeURIComponent(currentPage));
+        const data = await res.json();
+        return data.url;
+      } catch (err) {
+        console.error('获取登录 URL 失败:', err);
+        return null;
+      }
+    }
+    
+    // 页面加载时自动检查
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 强制认证检查
+      const authenticated = await forceAuth();
+      if (!authenticated) return;
+      
+      await checkLogin();
+      
+      // 绑定登录按钮（如果需要手动触发登录）
+      const loginBtn = document.getElementById('login-btn');
+      if (loginBtn) {
+        loginBtn.addEventListener('click', async () => {
+          const loginUrl = await getLoginUrl();
+          if (loginUrl) {
+            window.location.href = loginUrl;
+          }
+        });
+      }
+    });
+    
+    // 加载配置信息
+    async function loadConfigInfo(user) {
+      try {
+        const res = await fetch('/api/check');
+        const data = await res.json();
+        const tenantId = user.tenant_id || user.open_id;
+        const apiKey = data.api_key || '暂无';
+        
+        // 保存 API_KEY 到全局变量
+        currentApiKey = apiKey;
+        
+        // 填充弹窗
+        document.getElementById('modal-tenant-id').textContent = tenantId;
+        
+        // 脱敏显示 API_KEY
+        const maskedKey = apiKey && apiKey.length > 20 ? apiKey.substring(0, 10) + '...' + apiKey.substring(apiKey.length - 10) : apiKey;
+        const apiKeyEl = document.getElementById('modal-api-key');
+        apiKeyEl.textContent = maskedKey;
+        apiKeyEl.dataset.fullKey = apiKey;
+        apiKeyEl.dataset.maskedKey = maskedKey;
+        apiKeyEl.dataset.isMasked = 'true';
+        
+        return true;
+      } catch (err) {
+        console.error('加载配置失败:', err);
+        document.getElementById('modal-api-key').textContent = '加载失败';
+        return false;
+      }
+    }
+    
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast show ' + type;
+      setTimeout(() => toast.className = 'toast', 3000);
+    }
+    
+    async function loadPages() {
+      try {
+        const res = await fetch('/api/list', {
+          headers: {
+            'X-API-Key': currentApiKey || ''
+          }
+        });
+        const data = await res.json();
+        const container = document.getElementById('pages-container');
+        if (!data.success || data.pages.length === 0) {
+          container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><h2>还没有页面</h2><p>上传 HTML 文件后这里会显示列表</p></div>';
+          return;
+        }
+        container.innerHTML = '';
+        data.pages.forEach(page => {
+          const filename = page.filename;
+          // 精简标题：去掉时间戳和 upload- 前缀
+          let displayName = filename.replace(/\.(html|htm)$/i, '');
+          displayName = displayName.replace(/^\d+-upload-/, ''); // 去掉 "1775636865994-upload-"
+          displayName = displayName.replace(/^\d+-/, ''); // 去掉时间戳 "1775638360619-"
+          displayName = displayName.replace(/-/g, ' ').replace(/_/g, ' '); // 替换分隔符为空格
+          
+          const card = document.createElement('div');
+          card.className = 'page-card';
+          const tenantId = currentUser?.tenant_id || currentUser?.open_id || 'default';
+          const shareUrl = window.location.origin + '/' + tenantId + '/pages/' + encodeURIComponent(filename);
+          card.innerHTML = '<h3>' + displayName + '</h3><p style="font-size: 11px; color: #64748b; margin-top: 4px;">📄 ' + filename + '</p><div class="actions"><a href="/' + tenantId + '/pages/' + encodeURIComponent(filename) + '" target="_blank">🚀 打开页面</a><button class="share-btn" onclick="sharePage(\'' + filename + '\', \'' + shareUrl + '\')">🔗</button><button class="delete-btn" onclick="deletePage(\'' + filename + '\')">🗑️</button></div>';
+          container.appendChild(card);
+        });
+      } catch (err) {
+        document.getElementById('pages-container').innerHTML = '<div class="empty-state"><div class="icon">❌</div><h2>加载失败</h2><p>' + err.message + '</p></div>';
+      }
+    }
+    
+    document.getElementById('file-input').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (!file.name.endsWith('.html') && !file.name.endsWith('.htm')) {
+        showToast('❌ 请上传 HTML 文件', 'error');
+        return;
+      }
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: {
+            'X-API-Key': currentApiKey || ''
+          },
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('✅ 上传成功：' + file.name);
+          loadPages();
+        } else {
+          showToast('❌ 上传失败：' + data.error, 'error');
+        }
+      } catch (err) {
+        showToast('❌ 上传失败：' + err.message, 'error');
+      }
+      e.target.value = '';
+    });
+    
+    async function sharePage(filename, shareUrl) {
+      try {
+        // 复制到剪贴板
+        await navigator.clipboard.writeText(shareUrl);
+        showToast('🔗 分享链接已复制！', 'success');
+      } catch (err) {
+        // 降级方案：选中 textarea 内容
+        const textArea = document.createElement('textarea');
+        textArea.value = shareUrl;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          showToast('🔗 分享链接已复制！', 'success');
+        } catch (fallbackErr) {
+          showToast('❌ 复制失败，请手动复制链接', 'error');
+        }
+        document.body.removeChild(textArea);
+      }
+    }
+    
+    async function deletePage(filename) {
+      if (!confirm('确定要删除 "' + filename + '" 吗？此操作不可恢复！')) {
+        return;
+      }
+      try {
+        const res = await fetch('/api/delete', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': currentApiKey || ''
+          },
+          body: JSON.stringify({ filename: filename })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('✅ 删除成功：' + filename);
+          loadPages();
+        } else {
+          showToast('❌ 删除失败：' + data.error, 'error');
+        }
+      } catch (err) {
+        showToast('❌ 删除失败：' + err.message, 'error');
+      }
+    }
+  </script>
+</body>
+</html>
