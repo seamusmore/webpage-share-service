@@ -65,7 +65,26 @@ node services/auth-server.js
 
 ## 配置
 
-### tenants.json
+### 1. 环境变量（必填）
+
+项目根目录下有 `.env.example` 文件，复制为 `.env` 后填写：
+
+```bash
+cp .env.example .env
+```
+
+然后编辑 `.env`，填入以下必填项：
+
+| 变量 | 说明 | 示例 |
+|------|------|------|
+| `JWT_SECRET` | JWT 签名密钥，至少32位随机字符串 | `your-random-jwt-secret-xxx` |
+| `PUBLIC_DOMAIN` | 公网域名，用于生成分享链接和 OAuth 回调 | `your-domain.com` |
+| `FEISHU_APP_ID` | 飞书应用 ID | `cli_xxxxx` |
+| `FEISHU_APP_SECRET` | 飞书应用密钥 | `xxxxxxxxx` |
+
+可选配置项见 `.env.example` 内注释。`.env` 已加入 `.gitignore`，不会被提交。
+
+### 2. 租户数据
 
 租户数据通常由服务自动管理。用户首次通过飞书 OAuth 登录时，服务会自动以其 open_id 作为 tenant_id 创建租户，生成 API_KEY 和 storage_path。
 
@@ -86,22 +105,30 @@ node services/auth-server.js
 
 ## API
 
+### 获取 API_KEY
+
+1. 通过飞书 OAuth 登录管理页面 `https://your-domain.com/pages.html`
+2. 登录后点击右上角 **🔑 API Key** 按钮
+3. 在弹窗中查看自己的 API_KEY，点击 **拷贝** 按钮复制到剪贴板
+
+> 提示：API_KEY 默认脱敏显示，点击旁边的 👁️ 按钮可切换显示/隐藏。
+
 ### 上传文件
 ```
 POST /api/upload
-Headers: X-API-Key: ***
+Headers: X-API-Key: <你的_API_KEY>
 ```
 
 ### 文件列表
 ```
 GET /api/list?tenant=group1
-Headers: X-API-Key: ***
+Headers: X-API-Key: <你的_API_KEY>
 ```
 
 ### 删除文件
 ```
 DELETE /api/delete
-Headers: X-API-Key: ***
+Headers: X-API-Key: <你的_API_KEY>
 ```
 
 ---
