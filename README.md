@@ -70,8 +70,8 @@ node services/auth-server.js
 
 需要在该应用中进行以下配置：
 1. 网页应用：
-   网页应用配置 - 桌面端主页，设为：https://your-domain.com
-   网页应用配置 - 移动端主页，设为：https://your-domain.com
+   - 网页应用配置 - 桌面端主页，设为：https://your-domain.com
+   - 网页应用配置 - 移动端主页，设为：https://your-domain.com
 2. 权限管理：
    需要添加以下权限：
    ```
