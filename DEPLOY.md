@@ -5,7 +5,7 @@
 | 层级 | 位置 | 内容 | 进 Git |
 |------|------|------|--------|
 | 服务配置 | `.env` | JWT_SECRET、域名、飞书凭证、端口 | ❌ |
-| 租户数据 | `data/tenants.json` | API keys、storage_path、用户列表 | ❌ |
+| 租户数据 | `data/pages.db` | SQLite 数据库（租户、文件显示名称） | ❌ |
 | 示例模板 | `tenants.example.json` | 结构示例，无真实数据 | ✅ |
 
 ---
@@ -47,22 +47,22 @@ FEISHU_APP_SECRET=xxxxxxxxx
 
 ## 3. 租户数据
 
-租户不需要手动配置。用户首次通过飞书 OAuth 登录时，服务会自动以其 open_id 作为 tenant_id 创建租户，自动生成 API_KEY 和 storage_path，并写入 `data/tenants.json`。
+租户数据由 SQLite 数据库自动管理，无需手动配置。用户首次通过飞书 OAuth 登录时，服务会自动以其 open_id 作为 tenant_id 创建租户，生成 API_KEY 和 storage_path，并写入数据库。
 
-若需要人工创建租户，可参考 `tenants.example.json` 的格式：
+若需要人工创建租户，可参考 `tenants.example.json` 的格式，但实际数据以数据库为准：
 
 ```json
 {
   "tenants": {
     "ou_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx": {
-      "api_key": "sk_ou_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "api_key": "sk_ou_...xxxx",
       "storage_path": "./storage/tenant-ou_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     }
   }
 }
 ```
 
-> `data/tenants.json` 已在 `.gitignore` 中，不会被提交。
+> `data/pages.db` 已在 `.gitignore` 中，不会被提交。
 
 ---
 
@@ -187,9 +187,9 @@ pm2 monit
 | 问题 | 解决 |
 |------|------|
 | 服务启动失败，提示 JWT_SECRET 未配置 | 检查 `.env` 文件是否存在且已 source |
-| API_KEY 无效 | 检查 `data/tenants.json` 中的 `api_key` |
+| API_KEY 无效 | 检查数据库中对应租户的 `api_key` |
 | 飞书登录失败 | 检查 `.env` 中的 `FEISHU_APP_ID` / `FEISHU_APP_SECRET`，以及飞书后台的重定向 URL 配置 |
-| 403 禁止访问 | 确认用户 open_id 在对应租户的 `members` 列表中 |
+| 403 禁止访问 | 确认用户 open_id 在对应租户的数据库中 |
 | 文件上传成功但链接打不开 | 检查 `PUBLIC_DOMAIN` 是否正确，以及反向代理是否配置 |
 
 ---

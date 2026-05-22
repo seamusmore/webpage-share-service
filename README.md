@@ -34,7 +34,7 @@ webpage-share-service/
 │   ├── index.html          # 首页（登录页）
 │   └── pages.html          # 管理页面（上传/删除/列表）
 ├── data/
-│   └── tenants.json         # 租户运行时数据（API_KEY、成员列表）
+│   └── pages.db            # SQLite 数据库（租户、文件显示名称）
 ├── storage/                 # 文件存储（多租户隔离）
 │   ├── tenant-group1/
 │   ├── tenant-group2/
@@ -86,9 +86,9 @@ cp .env.example .env
 
 ### 2. 租户数据
 
-租户数据通常由服务自动管理。用户首次通过飞书 OAuth 登录时，服务会自动以其 open_id 作为 tenant_id 创建租户，生成 API_KEY 和 storage_path。
+租户数据由 SQLite 数据库（`data/pages.db`）自动管理，无需手动配置。用户首次通过飞书 OAuth 登录时，服务会自动以其 open_id 作为 tenant_id 创建租户，生成 API_KEY 和 storage_path，并写入数据库。
 
-如需手动创建或修改租户，可参照以下格式：
+如需手动创建或修改租户，可参照以下格式，但实际数据以数据库为准：
 
 ```json
 {

@@ -67,6 +67,31 @@
       margin-bottom: 8px;
       word-break: break-all;
       font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .page-card .rename-icon {
+      cursor: pointer;
+      font-size: 14px;
+      opacity: 0.5;
+      transition: opacity 0.2s, transform 0.2s;
+      flex-shrink: 0;
+    }
+    .page-card .rename-icon:hover {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+    .page-card .rename-input {
+      flex: 1;
+      padding: 4px 8px;
+      border: 2px solid #667eea;
+      border-radius: 6px;
+      font-size: 18px;
+      font-weight: 600;
+      color: #1f2937;
+      outline: none;
+      font-family: inherit;
     }
     .page-card p {
       color: #9ca3af;
@@ -98,6 +123,7 @@
       box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
       transform: translateY(-1px);
     }
+    .page-card .actions .download-btn,
     .page-card .actions .delete-btn,
     .page-card .actions .share-btn {
       flex: 0 0 44px;
@@ -113,7 +139,18 @@
       align-items: center;
       justify-content: center;
     }
-    .page-card .actions .delete-btn {
+    .page-card .actions .download-btn {
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
+      color: #3b82f6;
+      border-color: rgba(59, 130, 246, 0.2);
+    }
+    .page-card .actions .download-btn:hover {
+      background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%) !important;
+      border-color: rgba(59, 130, 246, 0.4);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+      transform: translateY(-1px);
+    }
+    .page-card .actions .delete-btn,
       background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%) !important;
       color: #ef4444;
       border-color: rgba(239, 68, 68, 0.2);
@@ -198,6 +235,28 @@
               onmouseover="this.style.background='#5568d3'" onmouseout="this.style.background='#667eea'">📋 拷贝</button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 重命名文件弹窗 -->
+  <div id="rename-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+    <div style="background:white; border-radius:16px; padding:32px; max-width:480px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.3); position:relative;">
+      <button id="close-rename-modal" style="position:absolute; top:16px; right:16px; background:none; border:none; font-size:20px; cursor:pointer; color:#64748b; line-height:1; padding:4px;">✕</button>
+      <h2 style="color:#1f2937; font-size:20px; margin-bottom:24px; font-weight:600;">✏️ 重命名文件</h2>
+      <div style="display:grid; gap:16px;">
+        <div>
+          <label style="display:block; color:#64748b; font-size:12px; margin-bottom:6px; font-weight:500;">原文件名</label>
+          <code id="rename-original-filename" style="background:#f8fafc; padding:10px 12px; border-radius:8px; display:block; color:#0f172a; font-size:13px; word-break:break-all; border:1px solid #e2e8f0; font-family:monospace;"></code>
+        </div>
+        <div>
+          <label style="display:block; color:#64748b; font-size:12px; margin-bottom:6px; font-weight:500;">新文件名</label>
+          <input id="rename-new-filename" type="text" style="width:100%; padding:10px 12px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'" placeholder="输入新的文件名（保留 .html 或 .htm 后缀）">
+        </div>
+      </div>
+      <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:24px;">
+        <button id="cancel-rename-btn" style="background:#f3f4f6; color:#374151; border:none; border-radius:8px; padding:10px 20px; font-size:14px; cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='#e5e7eb'" onmouseout="this.style.background='#f3f4f6'">取消</button>
+        <button id="confirm-rename-btn" style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border:none; border-radius:8px; padding:10px 20px; font-size:14px; cursor:pointer; transition:opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">确认重命名</button>
       </div>
     </div>
   </div>
@@ -426,8 +485,8 @@
         container.innerHTML = '';
         data.pages.forEach(page => {
           const filename = page.filename;
-          // 精简标题：去掉时间戳和 upload- 前缀
-          let displayName = filename.replace(/\.(html|htm)$/i, '');
+          // 使用页面返回的 display_name，如果没有则使用默认计算逻辑
+          let displayName = page.display_name || filename.replace(/\.(html|htm)$/i, '');
           displayName = displayName.replace(/^\d+-upload-/, ''); // 去掉 "1775636865994-upload-"
           displayName = displayName.replace(/^\d+-/, ''); // 去掉时间戳 "1775638360619-"
           displayName = displayName.replace(/-/g, ' ').replace(/_/g, ' '); // 替换分隔符为空格
@@ -436,7 +495,7 @@
           card.className = 'page-card';
           const tenantId = currentUser?.tenant_id || currentUser?.open_id || 'default';
           const shareUrl = window.location.origin + '/' + tenantId + '/pages/' + encodeURIComponent(filename);
-          card.innerHTML = '<h3>' + displayName + '</h3><p style="font-size: 11px; color: #64748b; margin-top: 4px;">📄 ' + filename + '</p><div class="actions"><a href="/' + tenantId + '/pages/' + encodeURIComponent(filename) + '" target="_blank">🚀 打开页面</a><button class="share-btn" onclick="sharePage(\'' + filename + '\', \'' + shareUrl + '\')">🔗</button><button class="delete-btn" onclick="deletePage(\'' + filename + '\')">🗑️</button></div>';
+          card.innerHTML = '<h3 data-display-name="' + displayName + '">' + displayName + ' <span class="rename-icon" onclick="renamePage(\'' + filename + '\')">✏️</span></h3><p style="font-size: 11px; color: #64748b; margin-top: 4px;">📄 ' + filename + '</p><div class="actions"><a href="/' + tenantId + '/pages/' + encodeURIComponent(filename) + '" target="_blank">🚀 打开页面</a><button class="share-btn" onclick="sharePage(\'' + filename + '\', \'' + shareUrl + '\')">🔗</button><button class="download-btn" onclick="downloadPage(\'' + filename + '\')">⬇️</button><button class="delete-btn" onclick="deletePage(\'' + filename + '\')">🗑️</button></div>';
           container.appendChild(card);
         });
       } catch (err) {
@@ -495,6 +554,162 @@
         }
         document.body.removeChild(textArea);
       }
+    }
+    
+    async function downloadPage(filename) {
+      try {
+        const res = await fetch('/api/download?filename=' + encodeURIComponent(filename), {
+          headers: {
+            'X-API-Key': currentApiKey || ''
+          }
+        });
+        
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({ error: '下载失败' }));
+          throw new Error(data.error || '下载失败');
+        }
+        
+        // 获取文件名并触发下载
+        const contentDisposition = res.headers.get('Content-Disposition');
+        let downloadName = filename;
+        if (contentDisposition) {
+          const match = contentDisposition.match(/filename="?([^"]+)"?/);
+          if (match) {
+            downloadName = decodeURIComponent(match[1]);
+          }
+        }
+        
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = downloadName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        showToast('⬇️ 开始下载：' + downloadName);
+      } catch (err) {
+        showToast('❌ 下载失败：' + err.message, 'error');
+      }
+    }
+
+    // 重命名文件功能
+    let currentRenameFilename = null;
+
+    function openRenameModal(filename) {
+      currentRenameFilename = filename;
+      document.getElementById('rename-original-filename').textContent = filename;
+      document.getElementById('rename-new-filename').value = '';
+      document.getElementById('rename-modal').style.display = 'flex';
+      document.getElementById('rename-new-filename').focus();
+    }
+
+    function closeRenameModal() {
+      document.getElementById('rename-modal').style.display = 'none';
+      currentRenameFilename = null;
+    }
+
+    // 绑定重命名弹窗事件
+    document.getElementById('close-rename-modal')?.addEventListener('click', closeRenameModal);
+    document.getElementById('cancel-rename-btn')?.addEventListener('click', closeRenameModal);
+    document.getElementById('rename-modal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'rename-modal') closeRenameModal();
+    });
+
+    document.getElementById('confirm-rename-btn')?.addEventListener('click', async () => {
+      if (!currentRenameFilename) return;
+      const newName = document.getElementById('rename-new-filename').value.trim();
+      if (!newName) {
+        showToast('❌ 请输入新文件名', 'error');
+        return;
+      }
+      if (!newName.match(/^[a-zA-Z0-9_\u4e00-\u9fa5\s-]+\.(html|htm)$/i)) {
+        showToast('❌ 文件名必须以 .html 或 .htm 结尾', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/rename', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': currentApiKey || ''
+          },
+          body: JSON.stringify({ old_filename: currentRenameFilename, new_filename: newName })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('✅ 重命名成功：' + newName);
+          closeRenameModal();
+          loadPages();
+        } else {
+          showToast('❌ 重命名失败：' + data.error, 'error');
+        }
+      } catch (err) {
+        showToast('❌ 重命名失败：' + err.message, 'error');
+      }
+    });
+
+    async function renamePage(filename) {
+      const card = event.target.closest('.page-card');
+      const h3 = card.querySelector('h3');
+      const currentName = h3.dataset.displayName || h3.textContent.replace('✏️', '').trim();
+      
+      // 替换为输入框
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'rename-input';
+      input.value = currentName;
+      input.dataset.filename = filename;
+      
+      // 替换标题内容
+      h3.innerHTML = '';
+      h3.appendChild(input);
+      input.focus();
+      input.select();
+      
+      // 保存函数
+      const saveRename = async () => {
+        const newName = input.value.trim();
+        if (!newName || newName === currentName) {
+          // 恢复原标题
+          loadPages();
+          return;
+        }
+        
+        try {
+          const res = await fetch('/api/rename-display', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-API-Key': currentApiKey || ''
+            },
+            body: JSON.stringify({ filename: filename, display_name: newName })
+          });
+          const data = await res.json();
+          if (data.success) {
+            showToast('✅ 标题已更新');
+            loadPages();
+          } else {
+            showToast('❌ 更新失败：' + data.error, 'error');
+            loadPages();
+          }
+        } catch (err) {
+          showToast('❌ 更新失败：' + err.message, 'error');
+          loadPages();
+        }
+      };
+      
+      // 失焦保存（延迟避免点击按钮时触发）
+      input.addEventListener('blur', () => setTimeout(saveRename, 100));
+      // 回车保存
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          input.blur();
+        }
+      });
     }
     
     async function deletePage(filename) {

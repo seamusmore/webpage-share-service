@@ -12,10 +12,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-
-// 数据文件路径
-const dataPath = path.join(__dirname, '..', 'data', 'tenants.json');
-const CONFIG = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+const sqlite3 = require('sqlite3').verbose();
 
 // 服务配置（全部从环境变量读取）
 const PORT = process.env.PORT || 9080;
@@ -25,6 +22,58 @@ const PUBLIC_DOMAIN = process.env.PUBLIC_DOMAIN || '';
 const BASE_URL = PUBLIC_DOMAIN ? `https://${PUBLIC_DOMAIN}` : '';
 const REDIRECT_URI = process.env.REDIRECT_URI || (BASE_URL ? `${BASE_URL}/oauth2/callback` : '');
 const STORAGE_BASE_PATH = process.env.STORAGE_BASE_PATH || path.join(__dirname, '..', 'storage');
+
+// SQLite 数据库路径
+const DB_PATH = path.join(__dirname, '..', 'data', 'pages.db');
+
+// 初始化数据库
+let db;
+try {
+  console.log('🔧 正在初始化数据库:', DB_PATH);
+  const dbDir = path.dirname(DB_PATH);
+  if (!fs.existsSync(dbDir)) {
+    console.log('📁 创建数据库目录:', dbDir);
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
+  
+  // 直接打开数据库，如果文件不存在 SQLite 会自动创建
+  db = new sqlite3.Database(DB_PATH, (err) => {
+    if (err) {
+      console.error('❌ 数据库连接失败:', err.message);
+      process.exit(1);
+    }
+    console.log('✅ 数据库连接成功');
+    
+    // 创建表
+    db.run('CREATE TABLE IF NOT EXISTS page_display_names (id INTEGER PRIMARY KEY AUTOINCREMENT, tenant_id TEXT NOT NULL, filename TEXT NOT NULL, display_name TEXT NOT NULL, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP, UNIQUE(tenant_id, filename))', function(err) {
+      if (err) {
+        console.error('❌ 创建表失败:', err.message);
+        process.exit(1);
+      }
+    });
+    
+    // 创建租户表
+    db.run('CREATE TABLE IF NOT EXISTS tenants (tenant_id TEXT PRIMARY KEY, api_key TEXT NOT NULL, storage_path TEXT NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)', function(err) {
+      if (err) {
+        console.error('❌ 创建租户表失败:', err.message);
+        process.exit(1);
+      }
+      console.log('✅ SQLite 数据库已初始化');
+    });
+    
+    // 查询并打印租户总数
+    db.get('SELECT COUNT(*) as count FROM tenants', function(err, row) {
+      if (err) {
+        console.error('❌ 查询租户表失败:', err.message);
+        return;
+      }
+      console.log(`📊 数据库租户总数：${row.count}`);
+    });
+  });
+} catch (err) {
+  console.error('❌ 数据库初始化失败:', err);
+  process.exit(1);
+}
 
 // JWT 配置（必须从环境变量读取，禁止硬编码）
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -47,7 +96,6 @@ console.log('🔐 网页分享公共服务（多租户版 - JWT 增强）');
 console.log(`   Port: ${PORT}`);
 console.log(`   Redirect URI: ${REDIRECT_URI}`);
 console.log(`   存储路径：${STORAGE_BASE_PATH}`);
-console.log(`   租户数：${Object.keys(CONFIG.tenants || {}).length}`);
 console.log(`   JWT 有效期：${JWT_EXPIRY}`);
 
 // JWT 工具函数（使用 Node 内置 crypto 实现 HMAC-SHA256 签名）
@@ -117,15 +165,38 @@ function setCookie(name, value, maxAge = 604800) {
   return `${name}=${encodeURIComponent(value)}; Path=/; HttpOnly; Expires=${expires}; SameSite=Lax`;
 }
 
-// 获取租户配置
+// 获取租户配置（从数据库查询）
 function getTenantByApiKey(apiKey) {
-  const tenants = CONFIG.tenants || {};
-  for (const [tenantId, tenant] of Object.entries(tenants)) {
-    if (tenant.api_key === apiKey) {
-      return { id: tenantId, ...tenant };
-    }
-  }
-  return null;
+  return new Promise((resolve, reject) => {
+    db.get('SELECT tenant_id, api_key, storage_path FROM tenants WHERE api_key = ?', [apiKey], function(err, row) {
+      if (err) {
+        reject(err);
+        return;
+      }
+      if (row) {
+        resolve({ id: row.tenant_id, api_key: row.api_key, storage_path: row.storage_path });
+      } else {
+        resolve(null);
+      }
+    });
+  });
+}
+
+// 根据 open_id 获取租户（从数据库查询）
+function getTenantByOpenId(openId) {
+  return new Promise((resolve, reject) => {
+    db.get('SELECT tenant_id, api_key, storage_path FROM tenants WHERE tenant_id = ?', [openId], function(err, row) {
+      if (err) {
+        reject(err);
+        return;
+      }
+      if (row) {
+        resolve({ id: row.tenant_id, api_key: row.api_key, storage_path: row.storage_path });
+      } else {
+        resolve(null);
+      }
+    });
+  });
 }
 
 // 正确提取 boundary（处理分号后的额外参数）
@@ -240,7 +311,7 @@ const server = http.createServer(async (req, res) => {
       if (jwtToken) {
         const payload = verifyJWT(jwtToken);
         if (payload) {
-          const tenant = CONFIG.tenants[payload.open_id];
+          const tenant = await getTenantByOpenId(payload.open_id);
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ 
             authenticated: true, 
@@ -317,17 +388,22 @@ const server = http.createServer(async (req, res) => {
         
         // 自动注册：首次登录自动创建租户
         const openId = userInfo.open_id;
-        if (!CONFIG.tenants[openId]) {
+        let tenant = await getTenantByOpenId(openId);
+        if (!tenant) {
           const apiKey = 'sk_' + openId + '_' + crypto.randomBytes(16).toString('hex');
           const storagePath = path.join(STORAGE_BASE_PATH, `tenant-${openId}`);
           
-          CONFIG.tenants[openId] = {
-            api_key: apiKey,
-            storage_path: storagePath
-          };
-          
-          // 保存配置
-          fs.writeFileSync(dataPath, JSON.stringify(CONFIG, null, 2));
+          // 保存到数据库
+          await new Promise((resolve, reject) => {
+            db.run('INSERT OR REPLACE INTO tenants (tenant_id, api_key, storage_path) VALUES (?, ?, ?)', [openId, apiKey, storagePath], function(err) {
+              if (err) {
+                reject(err);
+                return;
+              }
+              console.log(`✅ 租户已保存到数据库：${openId}`);
+              resolve();
+            });
+          });
           
           // 创建存储目录
           if (!fs.existsSync(storagePath)) {
@@ -335,6 +411,7 @@ const server = http.createServer(async (req, res) => {
           }
           
           console.log(`✅ 自动创建租户：${openId}`);
+          tenant = { id: openId, api_key: apiKey, storage_path: storagePath };
         }
         
         // 生成 JWT Token（包含用户信息和 API_KEY）
@@ -344,7 +421,7 @@ const server = http.createServer(async (req, res) => {
           email: userInfo.email || '',
           avatar: userInfo.avatar || '',
           tenant_id: openId,
-          api_key: CONFIG.tenants[openId].api_key
+          api_key: tenant.api_key
         });
         
         // 获取跳转地址
@@ -378,7 +455,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       
-      const tenant = getTenantByApiKey(apiKey);
+      const tenant = await getTenantByApiKey(apiKey);
       if (!tenant) {
         res.writeHead(403, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: '无效的 API_KEY' }));
@@ -486,6 +563,16 @@ const server = http.createServer(async (req, res) => {
           fs.writeFileSync(filePath, fileData);  // fileData 已经是 Buffer
           
           console.log(`✅ 文件上传成功：${tenant.id}/${safeFilename}`);
+          
+          // 在数据库中创建记录（display_name 为空，后续通过 rename-display 设置）
+          db.run('INSERT OR IGNORE INTO page_display_names (tenant_id, filename, display_name) VALUES (?, ?, ?)', [tenant.id, safeFilename, ''], function(err) {
+            if (err) {
+              console.error('❌ 数据库写入失败:', err.message);
+            } else {
+              console.log(`✅ 数据库记录已创建：${tenant.id}/${safeFilename}`);
+            }
+          });
+          
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ 
             success: true, 
@@ -510,7 +597,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       
-      const tenant = getTenantByApiKey(apiKey);
+      const tenant = await getTenantByApiKey(apiKey);
       if (!tenant) {
         res.writeHead(403, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: '无效的 API_KEY' }));
@@ -527,21 +614,205 @@ const server = http.createServer(async (req, res) => {
         .filter(f => /\.(html|htm)$/i.test(f))
         .map(f => {
           const stats = fs.statSync(path.join(tenant.storage_path, f));
-          return {
-            filename: f,
-            url: BASE_URL ? `${BASE_URL}/${tenant.id}/pages/${f}` : `/${tenant.id}/pages/${f}`,
-            size: stats.size,
-            createdAt: stats.birthtime
-          };
-        })
-        .sort((a, b) => b.createdAt - a.createdAt);
+          
+          // 从数据库读取 display_name
+          let displayName = null;
+          return new Promise((resolve) => {
+            db.get('SELECT display_name FROM page_display_names WHERE tenant_id = ? AND filename = ?', [tenant.id, f], (err, row) => {
+              if (row) {
+                displayName = row.display_name;
+              }
+              resolve({
+                filename: f,
+                display_name: displayName,
+                url: BASE_URL ? `${BASE_URL}/${tenant.id}/pages/${f}` : `/${tenant.id}/pages/${f}`,
+                size: stats.size,
+                createdAt: stats.birthtime
+              });
+            });
+          });
+        });
       
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, pages: files }));
+      Promise.all(files).then(pages => {
+        pages.sort((a, b) => b.createdAt - a.createdAt);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, pages: pages }));
+      }).catch(err => {
+        console.error('❌ 读取文件列表失败:', err);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      });
       return;
     }
     
-    // 8. API - 文件删除（需要 API_KEY）
+    // 8. API - 文件下载（需要 API_KEY）
+    if (url.pathname === '/api/download' && req.method === 'GET') {
+      const apiKey = req.headers['x-api-key'];
+      if (!apiKey) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '缺少 API_KEY' }));
+        return;
+      }
+      
+      const tenant = await getTenantByApiKey(apiKey);
+      if (!tenant) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '无效的 API_KEY' }));
+        return;
+      }
+      
+      const filename = url.searchParams.get('filename');
+      if (!filename) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '缺少 filename 参数' }));
+        return;
+      }
+      
+      const filePath = path.join(tenant.storage_path, filename);
+      
+      if (!fs.existsSync(filePath)) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'File not found' }));
+        return;
+      }
+      
+      const fileData = fs.readFileSync(filePath);
+      const downloadName = filename.replace(/^\d+-upload-/, '').replace(/^\d+-/, '');
+      
+      res.writeHead(200, {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${encodeURIComponent(downloadName)}"`,
+        'Content-Length': fileData.length
+      });
+      res.end(fileData);
+      return;
+    }
+    
+    // 9. API - 文件重命名（需要 API_KEY）
+    if (url.pathname === '/api/rename' && req.method === 'POST') {
+      const apiKey = req.headers['x-api-key'];
+      if (!apiKey) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '缺少 API_KEY' }));
+        return;
+      }
+      
+      const tenant = await getTenantByApiKey(apiKey);
+      if (!tenant) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '无效的 API_KEY' }));
+        return;
+      }
+      
+      const chunks = [];
+      req.on('data', chunk => chunks.push(chunk));
+      req.on('end', () => {
+        try {
+          const body = Buffer.concat(chunks).toString();
+          const { old_filename, new_filename } = JSON.parse(body);
+          
+          if (!old_filename || !new_filename) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: '缺少 old_filename 或 new_filename' }));
+            return;
+          }
+          
+          // 文件名格式校验
+          const filenameValid = /^[a-zA-Z0-9_\u4e00-\u9fa5\s-]+\.(html|htm)$/i.test(new_filename);
+          if (!filenameValid) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: '新文件名无效，必须以 .html 或 .htm 结尾' }));
+            return;
+          }
+          
+          const oldPath = path.join(tenant.storage_path, old_filename);
+          const newPath = path.join(tenant.storage_path, new_filename);
+          
+          if (!fs.existsSync(oldPath)) {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: '原文件不存在' }));
+            return;
+          }
+          
+          if (fs.existsSync(newPath)) {
+            res.writeHead(409, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: '目标文件名已存在' }));
+            return;
+          }
+          
+          fs.renameSync(oldPath, newPath);
+          console.log(`✅ 文件重命名成功：${tenant.id}/${old_filename} -> ${new_filename}`);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, old_filename, new_filename }));
+        } catch (err) {
+          console.error('❌ 重命名错误:', err);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+      return;
+    }
+    
+    // 9.5 API - 更新显示名称（需要 API_KEY）
+    if (url.pathname === '/api/rename-display' && req.method === 'POST') {
+      const apiKey = req.headers['x-api-key'];
+      if (!apiKey) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '缺少 API_KEY' }));
+        return;
+      }
+      
+      const tenant = await getTenantByApiKey(apiKey);
+      if (!tenant) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '无效的 API_KEY' }));
+        return;
+      }
+      
+      const chunks = [];
+      req.on('data', chunk => chunks.push(chunk));
+      req.on('end', () => {
+        try {
+          const body = Buffer.concat(chunks).toString();
+          const { filename, display_name } = JSON.parse(body);
+          
+          if (!filename || !display_name) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: '缺少 filename 或 display_name' }));
+            return;
+          }
+          
+          // 检查文件是否存在
+          const filePath = path.join(tenant.storage_path, filename);
+          if (!fs.existsSync(filePath)) {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: '文件不存在' }));
+            return;
+          }
+          
+          // 更新或插入数据库记录
+          db.run('INSERT OR REPLACE INTO page_display_names (tenant_id, filename, display_name, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)', [tenant.id, filename, display_name], function(err) {
+            if (err) {
+              console.error('❌ 数据库更新失败:', err.message);
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: err.message }));
+              return;
+            }
+            
+            console.log(`✅ 显示名称已更新：${tenant.id}/${filename} -> ${display_name}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, filename, display_name }));
+          });
+        } catch (err) {
+          console.error('❌ 更新显示名称错误:', err);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+      return;
+    }
+    
+    // 10. API - 文件删除（需要 API_KEY）
     if (url.pathname === '/api/delete' && req.method === 'POST') {
       const apiKey = req.headers['x-api-key'];
       if (!apiKey) {
@@ -550,7 +821,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       
-      const tenant = getTenantByApiKey(apiKey);
+      const tenant = await getTenantByApiKey(apiKey);
       if (!tenant) {
         res.writeHead(403, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: '无效的 API_KEY' }));
@@ -645,7 +916,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       
-      const tenant = CONFIG.tenants[tenantId];
+      const tenant = await getTenantByOpenId(tenantId);
       if (!tenant) {
         res.writeHead(404, { 'Content-Type': 'text/html' });
         res.end('<h1>404 租户不存在</h1>');
