@@ -65,7 +65,35 @@ node services/auth-server.js
 
 ## 配置
 
-### 1. 环境变量（必填）
+### 1. 创建飞书网页应用
+**注意：**这里配置的飞书应用必须添加为网页应用，而非机器人应用。
+
+需要在该应用中进行以下配置：
+1. 网页应用：
+   - 网页应用配置 - 桌面端主页，设为：https://your-domain.com
+   - 网页应用配置 - 移动端主页，设为：https://your-domain.com
+2. 权限管理：
+   需要添加以下权限：
+   ```
+   auth:user_access_token:read
+   contact:user.base:readonly
+   contact:user.basic_profile:readonly
+   contact:user.employee_id:readonly
+   offline_access
+   ```
+4. 安全设置：
+   重定向URL，添加：
+   ```
+   https://your-domain.com/oauth2/callback
+   https://open.feishu.cn/api-explorer/loading
+   ```
+
+   H5可信域名，添加：
+   ```
+   https://your-domain.com/oauth2/callback
+   ```
+
+### 2. 环境变量（必填）
 
 项目根目录下有 `.env.example` 文件，复制为 `.env` 后填写：
 
@@ -84,7 +112,7 @@ cp .env.example .env
 
 可选配置项见 `.env.example` 内注释。`.env` 已加入 `.gitignore`，不会被提交。
 
-### 2. 租户数据
+### 3. 租户数据
 
 租户数据由 SQLite 数据库（`data/pages.db`）自动管理，无需手动配置。用户首次通过飞书 OAuth 登录时，服务会自动以其 open_id 作为 tenant_id 创建租户，生成 API_KEY 和 storage_path，并写入数据库。
 
