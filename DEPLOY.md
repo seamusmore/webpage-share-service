@@ -6,7 +6,6 @@
 |------|------|------|--------|
 | 服务配置 | `.env` | JWT_SECRET、域名、飞书凭证、端口 | ❌ |
 | 租户数据 | `data/pages.db` | SQLite 数据库（租户、文件显示名称） | ❌ |
-| 示例模板 | `tenants.example.json` | 结构示例，无真实数据 | ✅ |
 
 ---
 
@@ -48,19 +47,6 @@ FEISHU_APP_SECRET=xxxxxxxxx
 ## 3. 租户数据
 
 租户数据由 SQLite 数据库自动管理，无需手动配置。用户首次通过飞书 OAuth 登录时，服务会自动以其 open_id 作为 tenant_id 创建租户，生成 API_KEY 和 storage_path，并写入数据库。
-
-若需要人工创建租户，可参考 `tenants.example.json` 的格式，但实际数据以数据库为准：
-
-```json
-{
-  "tenants": {
-    "ou_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx": {
-      "api_key": "sk_ou_...xxxx",
-      "storage_path": "./storage/tenant-ou_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-    }
-  }
-}
-```
 
 > `data/pages.db` 已在 `.gitignore` 中，不会被提交。
 

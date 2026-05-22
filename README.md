@@ -39,7 +39,6 @@ webpage-share-service/
 │   ├── tenant-group1/
 │   ├── tenant-group2/
 │   └── tenant-group3/
-├── tenants.example.json     # 租户配置示例
 └── README.md
 ```
 
