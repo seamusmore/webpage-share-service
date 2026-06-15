@@ -562,14 +562,17 @@ const server = http.createServer(async (req, res) => {
           const filePath = path.join(tenant.storage_path, safeFilename);
           fs.writeFileSync(filePath, fileData);  // fileData 已经是 Buffer
           
+          // 计算 display_name：去掉时间戳前缀，用原始文件名
+          const displayName = filename.replace(/^upload-/, '');
+          
           console.log(`✅ 文件上传成功：${tenant.id}/${safeFilename}`);
           
-          // 在数据库中创建记录（display_name 为空，后续通过 rename-display 设置）
-          db.run('INSERT OR IGNORE INTO page_display_names (tenant_id, filename, display_name) VALUES (?, ?, ?)', [tenant.id, safeFilename, ''], function(err) {
+          // 在数据库中创建记录（display_name 直接用原始文件名）
+          db.run('INSERT OR IGNORE INTO page_display_names (tenant_id, filename, display_name) VALUES (?, ?, ?)', [tenant.id, safeFilename, displayName], function(err) {
             if (err) {
               console.error('❌ 数据库写入失败:', err.message);
             } else {
-              console.log(`✅ 数据库记录已创建：${tenant.id}/${safeFilename}`);
+              console.log(`✅ 数据库记录已创建：${tenant.id}/${safeFilename} -> ${displayName}`);
             }
           });
           
@@ -742,6 +745,17 @@ const server = http.createServer(async (req, res) => {
           
           fs.renameSync(oldPath, newPath);
           console.log(`✅ 文件重命名成功：${tenant.id}/${old_filename} -> ${new_filename}`);
+          
+          // 同步更新数据库中的 filename
+          db.run('UPDATE page_display_names SET filename = ?, display_name = ?, updated_at = CURRENT_TIMESTAMP WHERE tenant_id = ? AND filename = ?',
+            [new_filename, '', tenant.id, old_filename], function(err) {
+              if (err) {
+                console.error('❌ 数据库更新文件名失败:', err.message);
+              } else {
+                console.log(`✅ 数据库文件名已更新：${old_filename} -> ${new_filename}`);
+              }
+            });
+          
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ success: true, old_filename, new_filename }));
         } catch (err) {
@@ -845,6 +859,16 @@ const server = http.createServer(async (req, res) => {
           
           fs.unlinkSync(filePath);
           console.log(`✅ 文件删除成功：${tenant.id}/${filename}`);
+          
+          // 同步删除数据库记录
+          db.run('DELETE FROM page_display_names WHERE tenant_id = ? AND filename = ?', [tenant.id, filename], function(err) {
+            if (err) {
+              console.error('❌ 数据库删除记录失败:', err.message);
+            } else {
+              console.log(`✅ 数据库记录已删除：${filename}`);
+            }
+          });
+          
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ success: true }));
         } catch (err) {
