@@ -39,11 +39,7 @@ webpage-share-service/
 ├── storage/                 # 文件存储（多租户隔离）
 │   ├── tenant-ou_xxx/
 │   └── tenant-ou_yyy/
-├── scripts/
-│   ├── migrate-files.js     # 数据迁移脚本
-│   └── selftest.js          # 自测脚本
 ├── .env                     # 环境变量（不提交）
-├── ecosystem.config.js      # PM2 配置（已废弃，保留兼容）
 └── README.md
 ```
 
@@ -211,30 +207,9 @@ Body: {"filename": "文件名"}
 
 ---
 
-## 数据管理
-
-### 数据迁移
-
-扫描磁盘文件，补录到数据库：
-
-```bash
-cd /mnt/webpage-share-service
-node scripts/migrate-files.js
-```
-
-### 自测
-
-```bash
-cd /mnt/webpage-share-service
-TEST_API_KEY=<你的API_KEY> node scripts/selftest.js
-```
-
-覆盖 rename、rename-display、download、delete 全流程测试。
-
----
-
 ## 版本历史
 
+- **2.2.0** (2026-06-15) — rename真正改文件名+同步DB、upload直接存display_name、delete同步删DB记录、systemd部署、去掉PM2
 - **2.1.0** (2026-06-15) — rename同步DB、upload直接存display_name、delete同步删DB记录、systemd部署、数据迁移
 - **2.0.0** (2026-05-22) — 多租户版，SQLite数据库，飞书OAuth认证
 
