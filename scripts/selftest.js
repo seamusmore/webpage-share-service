@@ -1,60 +1,68 @@
 #!/usr/bin/env node
 const http = require('http');
 const fs = require('fs');
-const { execSync } = require('child_process');
 
-const DB_PATH = '/mnt/webpage-share-service/data/pages.db';
 const TENANT_DIR = 'tenant-ou_1d5e4a5f7fc3a99fd3379271ec9294df';
+const apiKey = process.env.TEST_API_KEY;
 
-const apiKey = execSync(`sqlite3 ${DB_PATH} "SELECT api_key FROM tenants WHERE tenant_id='ou_1d5e4a5f7fc3a99fd3379271ec9294df';"`).toString().trim();
+let passed = 0, failed = 0;
+function check(name, cond) { cond ? console.log(`✓ ${name}`) : (console.log(`✗ ${name}`), failed++); if (cond) passed++; }
 
-function makeRequest(path, method, body) {
+function req(path, method, body) {
   return new Promise((resolve, reject) => {
-    const opts = { hostname: 'localhost', port: 9080, path, method, headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey } };
-    const req = http.request(opts, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => { try { resolve(JSON.parse(data)); } catch(e) { resolve(data); } });
-    });
-    req.on('error', reject);
-    if (body) req.write(JSON.stringify(body));
-    req.end();
+    const opts = { hostname:'localhost', port:9080, path, method, headers:{'Content-Type':'application/json','X-API-Key':apiKey} };
+    const r = http.request(opts, res => { let d=''; res.on('data',c=>d+=c); res.on('end',()=>{try{resolve(JSON.parse(d))}catch(e){resolve(d)}}); });
+    r.on('error', reject); if(body) r.write(JSON.stringify(body)); r.end();
   });
 }
 
 async function test() {
-  // 用第一个文件测试
-  const list = await makeRequest('/api/list', 'GET');
+  console.log('=== 1. API认证检查 ===');
+  const r1 = await new Promise(r => { http.get({hostname:'localhost',port:9080,path:'/api/list',headers:{'Content-Type':'application/json'}}, res=>{let d='';res.on('data',c=>d+=c);res.on('end',()=>r(JSON.parse(d)));}); });
+  check('无API_KEY被拒绝', r1.error === '缺少 API_KEY');
+  
+  console.log('\n=== 2. 文件列表 ===');
+  const list = await req('/api/list', 'GET');
+  check('列表返回正常', list.success === true && list.pages.length > 0);
+  check('有display_name字段', list.pages[0].display_name !== undefined);
+  
   const testFile = list.pages[0].filename;
-  const newFilename = 'test-rd-' + Date.now() + '.html';
+  const ts = Date.now();
+  const newFn = `test-self-${ts}.html`;
   
-  console.log('=== Rename ===');
-  const r = await makeRequest('/api/rename', 'POST', { old_filename: testFile, new_filename: newFilename });
-  console.log(r.success ? '✓ rename OK' : '✗ rename FAIL: ' + JSON.stringify(r));
+  console.log('\n=== 3. rename（改文件名+同步DB）===');
+  const rename = await req('/api/rename', 'POST', { old_filename: testFile, new_filename: newFn });
+  check('rename成功', rename.success === true);
+  check('磁盘文件已改名', fs.existsSync(`/mnt/webpage-share-service/storage/${TENANT_DIR}/${newFn}`));
   
-  console.log('\n=== Rename-Display ===');
-  const rd = await makeRequest('/api/rename-display', 'POST', { filename: newFilename, display_name: '自测显示名' });
-  console.log(rd.success ? '✓ rename-display OK' : '✗ rename-display FAIL: ' + JSON.stringify(rd));
+  const list2 = await req('/api/list', 'GET');
+  const found = list2.pages.find(p => p.filename === newFn);
+  check('新文件在列表中', found !== undefined);
   
-  const dbDisplay = execSync(`sqlite3 ${DB_PATH} "SELECT display_name FROM page_display_names WHERE filename='${newFilename}';"`).toString().trim();
-  console.log(`DB display_name: ${dbDisplay === '自测显示名' ? '✓ 正确' : '✗ 错误: ' + dbDisplay}`);
+  console.log('\n=== 4. rename-display ===');
+  const rd = await req('/api/rename-display', 'POST', { filename: newFn, display_name: '测试显示名' });
+  check('rename-display成功', rd.success === true);
+  check('display_name已更新', rd.display_name === '测试显示名');
   
-  console.log('\n=== Delete ===');
-  const d = await makeRequest('/api/delete', 'POST', { filename: newFilename });
-  console.log(d.success ? '✓ delete OK' : '✗ delete FAIL: ' + JSON.stringify(d));
+  const list3 = await req('/api/list', 'GET');
+  const found3 = list3.pages.find(p => p.filename === newFn);
+  check('列表中display_name已更新', found3 && found3.display_name === '测试显示名');
   
-  const diskExists = fs.existsSync(`/mnt/webpage-share-service/storage/${TENANT_DIR}/${newFilename}`);
-  console.log(`磁盘文件: ${diskExists ? '✗ 还在!' : '✓ 已删除'}`);
+  console.log('\n=== 5. download ===');
+  const dl = await new Promise(r => { http.get({hostname:'localhost',port:9080,path:`/api/download?filename=${newFn}`,headers:{'X-API-Key':apiKey}}, res=>r({status:res.statusCode})); });
+  check('download返回200', dl.status === 200);
   
-  const dbCount = execSync(`sqlite3 ${DB_PATH} "SELECT COUNT(*) FROM page_display_names WHERE filename='${newFilename}';"`).toString().trim();
-  console.log(`DB记录: ${dbCount === '0' ? '✓ 已删除' : '✗ 还在!'}`);
+  console.log('\n=== 6. delete ===');
+  const del = await req('/api/delete', 'POST', { filename: newFn });
+  check('delete成功', del.success === true);
+  check('磁盘文件已删除', !fs.existsSync(`/mnt/webpage-share-service/storage/${TENANT_DIR}/${newFn}`));
   
-  console.log('\n=== 验证列表接口返回 ===');
-  const list2 = await makeRequest('/api/list', 'GET');
-  const found = list2.pages.find(p => p.filename === newFilename);
-  console.log(found ? '✗ 文件还在列表中!' : '✓ 文件不在列表中');
+  const list4 = await req('/api/list', 'GET');
+  const found4 = list4.pages.find(p => p.filename === newFn);
+  check('DB记录已删除', found4 === undefined);
   
-  console.log('\n=== 全部自测完成 ===');
+  console.log(`\n=== 结果: ${passed}通过 ${failed}失败 ===`);
+  if (failed > 0) process.exit(1);
 }
 
 test().catch(e => { console.error(e); process.exit(1); });
