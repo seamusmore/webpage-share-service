@@ -53,12 +53,21 @@ try {
     });
     
     // 创建租户表
-    db.run('CREATE TABLE IF NOT EXISTS tenants (tenant_id TEXT PRIMARY KEY, api_key TEXT NOT NULL, storage_path TEXT NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)', function(err) {
+    db.run('CREATE TABLE IF NOT EXISTS tenants (tenant_id TEXT PRIMARY KEY, api_key TEXT NOT NULL, storage_path TEXT NOT NULL, name TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)', function(err) {
       if (err) {
         console.error('❌ 创建租户表失败:', err.message);
         process.exit(1);
       }
       console.log('✅ SQLite 数据库已初始化');
+    });
+    
+    // 迁移：为旧 tenants 表添加 name 列（幂等，已存在则跳过）
+    db.run('ALTER TABLE tenants ADD COLUMN name TEXT', function(err) {
+      if (err && !err.message.includes('duplicate column')) {
+        console.error('⚠️  迁移 tenants 表失败:', err.message);
+      } else if (!err) {
+        console.log('✅ tenants 表已迁移：添加 name 列');
+      }
     });
     
     // 查询并打印租户总数
@@ -393,9 +402,9 @@ const server = http.createServer(async (req, res) => {
           const apiKey = 'sk_' + openId + '_' + crypto.randomBytes(16).toString('hex');
           const storagePath = path.join(STORAGE_BASE_PATH, `tenant-${openId}`);
           
-          // 保存到数据库
+          // 保存到数据库（含用户名）
           await new Promise((resolve, reject) => {
-            db.run('INSERT OR REPLACE INTO tenants (tenant_id, api_key, storage_path) VALUES (?, ?, ?)', [openId, apiKey, storagePath], function(err) {
+            db.run('INSERT OR REPLACE INTO tenants (tenant_id, api_key, storage_path, name) VALUES (?, ?, ?, ?)', [openId, apiKey, storagePath, userInfo.name], function(err) {
               if (err) {
                 reject(err);
                 return;
