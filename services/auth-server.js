@@ -421,6 +421,13 @@ const server = http.createServer(async (req, res) => {
           
           console.log(`✅ 自动创建租户：${openId}`);
           tenant = { id: openId, api_key: apiKey, storage_path: storagePath };
+        } else {
+          // 已有用户：更新 name（飞书昵称可能变更）
+          db.run('UPDATE tenants SET name = ? WHERE tenant_id = ?', [userInfo.name, openId], function(err) {
+            if (err) {
+              console.error(`⚠️  更新用户 name 失败：${err.message}`);
+            }
+          });
         }
         
         // 生成 JWT Token（包含用户信息和 API_KEY）
