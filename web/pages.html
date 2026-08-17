@@ -680,20 +680,22 @@
         }
         
         try {
-          const res = await fetch('/api/rename-display', {
+          const oldExt = filename.match(/\.(html|htm)$/i)?.[0] || '.html';
+        const newFilename = newName.replace(/\.(html|htm)$/i, '') + oldExt;
+        const res = await fetch('/api/rename', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'X-API-Key': currentApiKey || ''
             },
-            body: JSON.stringify({ filename: filename, display_name: newName })
+            body: JSON.stringify({ old_filename: filename, new_filename: newFilename })
           });
           const data = await res.json();
           if (data.success) {
-            showToast('✅ 标题已更新');
+            showToast('✅ 文件已重命名：' + newFilename);
             loadPages();
           } else {
-            showToast('❌ 更新失败：' + data.error, 'error');
+            showToast('❌ 重命名失败：' + data.error, 'error');
             loadPages();
           }
         } catch (err) {
