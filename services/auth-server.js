@@ -60,6 +60,14 @@ try {
       }
       console.log('✅ SQLite 数据库已初始化');
     });
+
+    db.run('CREATE TABLE IF NOT EXISTS page_favorites (tenant_id TEXT NOT NULL, filename TEXT NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (tenant_id, filename))', function(err) {
+      if (err) {
+        console.error('❌ 创建收藏表失败:', err.message);
+      } else {
+        console.log('✅ page_favorites 表已就绪');
+      }
+    });
     
     // 迁移：为旧 tenants 表添加 name 列（幂等，已存在则跳过）
     db.run('ALTER TABLE tenants ADD COLUMN name TEXT', function(err) {
@@ -711,6 +719,72 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // 6.6. API - 收藏切换（需要 API_KEY）
+    if (url.pathname === '/api/favorites' && req.method === 'POST') {
+      const apiKey = req.headers['x-api-key'];
+      if (!apiKey) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '缺少 API_KEY' }));
+        return;
+      }
+
+      const tenant = await getTenantByApiKey(apiKey);
+      if (!tenant) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '无效的 API_KEY' }));
+        return;
+      }
+
+      const chunks = [];
+      req.on('data', chunk => chunks.push(chunk));
+      req.on('end', () => {
+        try {
+          const body = JSON.parse(Buffer.concat(chunks).toString());
+          const filename = body.filename;
+          if (!filename) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: '缺少 filename' }));
+            return;
+          }
+
+          db.get('SELECT 1 FROM page_favorites WHERE tenant_id = ? AND filename = ?', [tenant.id, filename], (err, row) => {
+            if (err) {
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: err.message }));
+              return;
+            }
+            if (row) {
+              // 取消收藏
+              db.run('DELETE FROM page_favorites WHERE tenant_id = ? AND filename = ?', [tenant.id, filename], (err) => {
+                if (err) {
+                  res.writeHead(500, { 'Content-Type': 'application/json' });
+                  res.end(JSON.stringify({ error: err.message }));
+                  return;
+                }
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true, is_favorite: false }));
+              });
+            } else {
+              // 添加收藏
+              db.run('INSERT OR IGNORE INTO page_favorites (tenant_id, filename) VALUES (?, ?)', [tenant.id, filename], (err) => {
+                if (err) {
+                  res.writeHead(500, { 'Content-Type': 'application/json' });
+                  res.end(JSON.stringify({ error: err.message }));
+                  return;
+                }
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true, is_favorite: true }));
+              });
+            }
+          });
+        } catch (err) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: '请求解析失败' }));
+        }
+      });
+      return;
+    }
+
     // 7. API - 文件列表（需要 API_KEY）
     if (url.pathname === '/api/list' && req.method === 'GET') {
       const apiKey = req.headers['x-api-key'];
@@ -745,19 +819,25 @@ const server = http.createServer(async (req, res) => {
               if (row) {
                 displayName = row.display_name;
               }
-              resolve({
-                filename: f,
-                display_name: displayName,
-                url: BASE_URL ? `${BASE_URL}/${tenant.id}/pages/${f}` : `/${tenant.id}/pages/${f}`,
-                size: stats.size,
-                createdAt: stats.birthtime
+              db.get('SELECT 1 FROM page_favorites WHERE tenant_id = ? AND filename = ?', [tenant.id, f], (err, favRow) => {
+                resolve({
+                  filename: f,
+                  display_name: displayName,
+                  url: BASE_URL ? `${BASE_URL}/${tenant.id}/pages/${f}` : `/${tenant.id}/pages/${f}`,
+                  size: stats.size,
+                  createdAt: stats.birthtime,
+                  is_favorite: !!favRow
+                });
               });
             });
           });
         });
       
       Promise.all(files).then(pages => {
-        pages.sort((a, b) => b.createdAt - a.createdAt);
+        pages.sort((a, b) => {
+          if (a.is_favorite !== b.is_favorite) return a.is_favorite ? -1 : 1;
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, pages: pages }));
       }).catch(err => {
