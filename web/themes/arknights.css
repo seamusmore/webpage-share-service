@@ -233,3 +233,30 @@ body {
 .search-btn {
   clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 0 100%);
 }
+
+/* 头像六边形 */
+.user-info.avatar-mode {
+  width: 32px; height: 32px; padding: 0;
+  background: linear-gradient(135deg, #ff6b35, #ffb347);
+  color: #0a0a0a; border: none; border-radius: 0;
+  font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  clip-path: polygon(30% 0, 100% 0, 100% 70%, 70% 100%, 0 100%, 0 30%);
+}
+
+/* 顶部按钮统一高度 */
+.nav a, .nav label, .nav button {
+  height: 36px; line-height: 1;
+}
+.theme-btn {
+  height: 36px; line-height: 1;
+}
+
+/* 上传主按钮：去边框 + 发光 */
+.upload-btn {
+  border: none;
+  box-shadow: 0 0 16px rgba(255, 107, 53, 0.35);
+}
+.upload-btn:hover {
+  box-shadow: 0 0 24px rgba(255, 107, 53, 0.5);
+}

@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>页面列表 - 内部网页服务</title>
-  <link id="theme-css" rel="stylesheet" href="/themes/classic.css">
   <style>
     /* ============ 骨架 CSS（结构性，不含颜色/装饰） ============ */
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -342,6 +341,7 @@
     .swatch-endfield  { background: linear-gradient(135deg, #edece6 0%, #7a8a6a 100%); }
     .swatch-genshin   { background: linear-gradient(135deg, #2b3a55 0%, #d4b678 100%); }
   </style>
+  <link id="theme-css" rel="stylesheet" href="/themes/classic.css">
 </head>
 <body>
   <div class="container">
@@ -450,7 +450,7 @@
       classic:   { tag: '', ph: '输入名称搜索...',       search: '搜索',     open: '🚀 打开页面', fileP: '📄 ', timeP: '🕐 ', timeFmt: 'default' },
       light:     { tag: '', ph: '输入名称搜索...',       search: '搜索',     open: '🚀 打开页面', fileP: '📄 ', timeP: '🕐 ', timeFmt: 'default' },
       dark:      { tag: '', ph: '输入名称搜索...',       search: '搜索',     open: '🚀 打开页面', fileP: '📄 ', timeP: '🕐 ', timeFmt: 'default' },
-      arknights: { tag: '// ARCHIVE_TERMINAL', ph: '> query: name_keyword', search: 'EXEC', open: 'OPEN', fileP: '> ', timeP: '> ', timeFmt: 'default' },
+      arknights: { tag: '// ARCHIVE_TERMINAL', ph: '> query: name_keyword', search: '搜索', open: 'OPEN', fileP: '> ', timeP: '> ', timeFmt: 'default' },
       endfield:  { tag: 'TALOS-II DATA ARCHIVE', ph: 'search_by_name', search: 'SEARCH', open: 'OPEN', fileP: 'fname: ', timeP: 'mtime: ', timeFmt: 'default' },
       genshin:   { tag: '✦ Teyvat Archive ✦', ph: '请输入页面前缀……', search: '搜索', open: '打开页面', fileP: '', timeP: '', timeFmt: 'zh-dot' }
     };
@@ -469,6 +469,18 @@
       return dt.toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
     }
 
+    function renderUserInfo() {
+      const userInfo = document.getElementById('user-info');
+      if (!userInfo || !currentUser) return;
+      if (currentTheme === 'arknights') {
+        userInfo.innerHTML = (currentUser.name || '?').charAt(0);
+        userInfo.classList.add('avatar-mode');
+      } else {
+        userInfo.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px; margin-right: 6px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' + currentUser.name;
+        userInfo.classList.remove('avatar-mode');
+      }
+    }
+
     function applyTheme(themeId) {
       if (!THEMES.find(t => t.id === themeId)) themeId = 'classic';
       currentTheme = themeId;
@@ -482,6 +494,8 @@
       if (sb) sb.textContent = themeText('search');
       const tt = document.getElementById('title-tag');
       if (tt) tt.textContent = themeText('tag');
+      // 更新头像/用户名
+      renderUserInfo();
       // 高亮选中项
       document.querySelectorAll('.theme-option').forEach(el => {
         el.classList.toggle('active', el.dataset.theme === themeId);
@@ -592,7 +606,7 @@
     async function showLoggedInUI(user) {
       const userInfo = document.getElementById('user-info');
       userInfo.style.display = 'inline-block';
-      userInfo.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px; margin-right: 6px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${user.name}`;
+      renderUserInfo();
       document.getElementById('file-input').disabled = false;
       document.getElementById('apikey-btn').style.display = 'inline-block';
       document.getElementById('plugin-btn').style.display = 'inline-block';
