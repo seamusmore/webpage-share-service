@@ -54,15 +54,19 @@
 
   --btn-nav-bg: transparent;
   --btn-nav-fg: #b0b0b0;
-  --btn-nav-bg-hover: rgba(255, 107, 53, 0.1);
+  --btn-nav-bg-hover: transparent;
+  --btn-nav-fg-hover: #ffffff;
   --btn-nav-border: 1px solid #3a3a3a;
+  --btn-nav-border-hover: 1px solid #666666;
   --btn-primary-bg: #ff6b35;
   --btn-primary-bg-hover: #ff8a5c;
   --btn-primary-fg: #0a0a0a;
   --btn-danger-bg: transparent;
-  --btn-danger-bg-hover: rgba(255, 107, 53, 0.1);
+  --btn-danger-bg-hover: transparent;
   --btn-danger-fg: #b0b0b0;
+  --btn-danger-fg-hover: #ffffff;
   --btn-danger-border: 1px solid #3a3a3a;
+  --btn-danger-border-hover: 1px solid #666666;
 
   --btn-letter-spacing: 1px;
   --btn-text-transform: uppercase;
@@ -155,7 +159,8 @@ body {
   clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
 }
 .refresh-btn { clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); }
-.badge { clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%); }
+.page-count { clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%); }
+.open-btn { clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%); }
 .actions .share-btn,
 .actions .download-btn,
 .actions .replace-btn,
@@ -233,6 +238,11 @@ body {
 .search-btn {
   clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 0 100%);
 }
+.search-btn:hover {
+  opacity: 1;
+  border-color: #ff6b35;
+  color: #ff6b35;
+}
 
 /* 头像六边形 */
 .user-info.avatar-mode {
@@ -254,9 +264,10 @@ body {
 
 /* 上传主按钮：去边框 + 发光 */
 .upload-btn {
-  border: none;
+  border: none !important;
   box-shadow: 0 0 16px rgba(255, 107, 53, 0.35);
 }
 .upload-btn:hover {
+  border: none !important;
   box-shadow: 0 0 24px rgba(255, 107, 53, 0.5);
 }

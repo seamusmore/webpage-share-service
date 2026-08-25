@@ -73,12 +73,20 @@
       font-weight: var(--btn-weight, 500);
       font-family: var(--btn-font, inherit);
     }
-    .nav a:hover, .nav label:hover, .nav button:hover { background: var(--btn-nav-bg-hover); }
+    .nav a:hover, .nav label:hover, .nav button:hover {
+      background: var(--btn-nav-bg-hover);
+      border-color: var(--btn-nav-border-hover, var(--btn-nav-border, transparent));
+      color: var(--btn-nav-fg-hover, var(--btn-nav-fg));
+    }
     #file-input { display: none; }
     .upload-btn { background: var(--btn-primary-bg) !important; color: var(--btn-primary-fg) !important; }
     .upload-btn:hover { background: var(--btn-primary-bg-hover) !important; }
     .logout-btn { background: var(--btn-danger-bg) !important; color: var(--btn-danger-fg, var(--btn-nav-fg)) !important; margin-left: auto; border: var(--btn-danger-border, var(--btn-nav-border, none)) !important; }
-    .logout-btn:hover { background: var(--btn-danger-bg-hover) !important; }
+    .logout-btn:hover {
+      background: var(--btn-danger-bg-hover) !important;
+      border-color: var(--btn-danger-border-hover, var(--btn-nav-border-hover, var(--btn-danger-border))) !important;
+      color: var(--btn-danger-fg-hover, var(--btn-nav-fg-hover, var(--btn-danger-fg))) !important;
+    }
     .user-info {
       padding: 10px 20px; background: var(--user-info-bg);
       border-radius: var(--btn-radius, 8px); font-size: 14px; color: var(--fg-text);
@@ -450,8 +458,8 @@
       classic:   { tag: '', ph: '输入名称搜索...',       search: '搜索',     open: '🚀 打开页面', fileP: '📄 ', timeP: '🕐 ', timeFmt: 'default' },
       light:     { tag: '', ph: '输入名称搜索...',       search: '搜索',     open: '🚀 打开页面', fileP: '📄 ', timeP: '🕐 ', timeFmt: 'default' },
       dark:      { tag: '', ph: '输入名称搜索...',       search: '搜索',     open: '🚀 打开页面', fileP: '📄 ', timeP: '🕐 ', timeFmt: 'default' },
-      arknights: { tag: '// ARCHIVE_TERMINAL', ph: '> query: name_keyword', search: '搜索', open: 'OPEN', fileP: '> ', timeP: '> ', timeFmt: 'default' },
-      endfield:  { tag: 'TALOS-II DATA ARCHIVE', ph: 'search_by_name', search: 'SEARCH', open: 'OPEN', fileP: 'fname: ', timeP: 'mtime: ', timeFmt: 'default' },
+      arknights: { tag: '// ARCHIVE_TERMINAL', ph: '> query: name_keyword', search: 'EXEC', open: 'OPEN', fileP: '> ', timeP: '> ', timeFmt: 'zh-hyphen' },
+      endfield:  { tag: 'TALOS-II DATA ARCHIVE', ph: 'search_by_name', search: 'SEARCH', open: 'OPEN', fileP: 'fname: ', timeP: 'mtime: ', timeFmt: 'zh-hyphen' },
       genshin:   { tag: '✦ Teyvat Archive ✦', ph: '请输入页面前缀……', search: '搜索', open: '打开页面', fileP: '', timeP: '', timeFmt: 'zh-dot' }
     };
 
@@ -461,10 +469,15 @@
 
     function formatDate(d, fmt) {
       const dt = new Date(d);
+      const hh = String(dt.getHours()).padStart(2, '0');
+      const mm = String(dt.getMinutes()).padStart(2, '0');
       if (fmt === 'zh-dot') {
-        const hh = String(dt.getHours()).padStart(2, '0');
-        const mm = String(dt.getMinutes()).padStart(2, '0');
         return dt.getFullYear() + '年' + (dt.getMonth() + 1) + '月' + dt.getDate() + '日 · ' + hh + ':' + mm;
+      }
+      if (fmt === 'zh-hyphen') {
+        const mo = String(dt.getMonth() + 1).padStart(2, '0');
+        const dd = String(dt.getDate()).padStart(2, '0');
+        return dt.getFullYear() + '-' + mo + '-' + dd + ' ' + hh + ':' + mm;
       }
       return dt.toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
     }
@@ -473,10 +486,12 @@
       const userInfo = document.getElementById('user-info');
       if (!userInfo || !currentUser) return;
       if (currentTheme === 'classic') {
+        userInfo.style.display = 'inline-block';
         userInfo.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px; margin-right: 6px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' + currentUser.name;
         userInfo.classList.remove('avatar-mode');
       } else {
-        userInfo.innerHTML = (currentUser.name || '?').charAt(0);
+        userInfo.style.display = 'inline-flex';
+        userInfo.innerHTML = (currentUser.name || '?').slice(-1);
         userInfo.classList.add('avatar-mode');
       }
     }
