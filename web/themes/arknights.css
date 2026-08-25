@@ -165,7 +165,7 @@ body {
 .actions .download-btn,
 .actions .replace-btn,
 .actions .delete-btn { clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
-.search-input { clip-path: none; }
+.search-input { clip-path: none; border-width: 1px; }
 
 /* 卡片右上斜切阴影 */
 .page-card::after {
