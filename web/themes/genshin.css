@@ -202,3 +202,73 @@ body::before {
 .title-tag::after {
   background: linear-gradient(90deg, #b8975c, transparent);
 }
+
+/* ===== 原稿逐项还原 ===== */
+
+/* 头像圆形 */
+.user-info.avatar-mode {
+  width: 36px; height: 36px; padding: 0;
+  background: linear-gradient(135deg, #d4b678, #9a7d4a);
+  color: #fff8dc; border: 2px solid #f5ead0; border-radius: 50%;
+  font-size: 14px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 1px #b8975c, 0 2px 6px rgba(154, 125, 74, 0.4);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* 容器宽度 */
+.container { max-width: 1180px; }
+
+/* body 内边距 */
+body { padding: 32px 20px; }
+
+/* header 内边距 */
+.header { padding: 26px 30px; }
+
+/* 标题间距 + 阴影 */
+.header h1 { gap: 14px; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6); }
+
+/* 徽章尺寸 */
+.page-count {
+  min-width: 30px; height: 22px; padding: 0 10px;
+  font-size: 12px; font-weight: 700;
+}
+
+/* 导航 */
+.nav { gap: 10px; }
+.nav a, .nav label, .nav button {
+  font-size: 13px; padding: 10px 20px;
+}
+
+/* 搜索框 */
+.search-input {
+  padding: 12px 14px 12px 42px;
+  font-size: 14px;
+}
+.search-btn {
+  padding: 12px 26px; font-size: 13px;
+}
+
+/* 卡片标题阴影 */
+.page-card h3 { text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5); }
+
+/* 卡片元信息（斜体衬线） */
+.page-card p {
+  font-family: 'Palatino', 'Noto Serif SC', serif;
+  font-style: italic;
+  font-size: 12px;
+}
+
+/* 操作区间距 */
+.actions { gap: 8px; }
+
+/* 打开按钮 */
+.open-btn {
+  padding: 11px 16px; font-size: 13px;
+  letter-spacing: 3px; border-radius: 18px;
+}
+
+/* 图标按钮尺寸 */
+.actions .share-btn, .actions .download-btn, .actions .replace-btn, .actions .delete-btn {
+  width: 38px; height: 42px;
+}

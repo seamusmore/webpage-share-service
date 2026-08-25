@@ -472,7 +472,7 @@
     function renderUserInfo() {
       const userInfo = document.getElementById('user-info');
       if (!userInfo || !currentUser) return;
-      if (currentTheme === 'arknights') {
+      if (currentTheme === 'arknights' || currentTheme === 'endfield' || currentTheme === 'genshin') {
         userInfo.innerHTML = (currentUser.name || '?').charAt(0);
         userInfo.classList.add('avatar-mode');
       } else {
