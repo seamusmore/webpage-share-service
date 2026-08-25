@@ -46,7 +46,7 @@
   --refresh-border: #b8975c;
   --refresh-fg: #9a7d4a;
   --refresh-bg-hover: linear-gradient(180deg, #d4b678 0%, #b8975c 100%);
-  --refresh-border-hover: #9a7d4a;
+  --refresh-border-hover: #b8975c;
   --refresh-fg-hover: #fff8dc;
   --refresh-radius: 50%;
 
@@ -54,13 +54,13 @@
 
   --btn-nav-bg: linear-gradient(180deg, #f5ead0 0%, #e8d9b0 100%);
   --btn-nav-fg: #6a5428;
-  --btn-nav-bg-hover: linear-gradient(180deg, #faf0da 0%, #efe0bb 100%);
+  --btn-nav-bg-hover: linear-gradient(180deg, #f5ead0 0%, #e8d9b0 100%);
   --btn-nav-border: 1px solid #b8975c;
   --btn-primary-bg: linear-gradient(180deg, #d4b678 0%, #9a7d4a 100%);
   --btn-primary-bg-hover: linear-gradient(180deg, #e0c588 0%, #b8975c 100%);
   --btn-primary-fg: #fff8dc;
   --btn-danger-bg: linear-gradient(180deg, #f5ead0 0%, #e8d9b0 100%);
-  --btn-danger-bg-hover: linear-gradient(180deg, #faf0da 0%, #efe0bb 100%);
+  --btn-danger-bg-hover: linear-gradient(180deg, #f5ead0 0%, #e8d9b0 100%);
   --btn-danger-fg: #6a5428;
   --btn-danger-border: 1px solid #b8975c;
 
@@ -342,4 +342,39 @@ body { padding: 32px 20px; }
 .open-btn {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   font-weight: 600;
+}
+
+/* card-index 首字母大写（覆盖骨架 uppercase） */
+.card-index {
+  text-transform: none;
+}
+
+/* 刷新箭头：15px（照小样） */
+.refresh-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* 卡片底部图标按钮：细描边 1.5 + 15px */
+.actions .share-btn svg,
+.actions .download-btn svg,
+.actions .replace-btn svg,
+.actions .delete-btn svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 1.5;
+}
+
+/* 卡片 hover 位移 -4px（骨架是 -6px） */
+.page-card:hover {
+  transform: translateY(-4px);
+}
+
+/* 图标按钮 hover：上浮 -2px + 统一金棕光晕 */
+.actions .share-btn:hover,
+.actions .download-btn:hover,
+.actions .replace-btn:hover,
+.actions .delete-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(154, 125, 74, 0.3);
 }
