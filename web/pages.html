@@ -394,44 +394,22 @@
 
   <!-- API Key 管理弹窗 -->
   <div id="apikey-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
-    <div style="background:white; border-radius:16px; padding:32px; max-width:480px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.3); position:relative;">
-      <button id="close-apikey-modal" style="position:absolute; top:16px; right:16px; background:none; border:none; font-size:20px; cursor:pointer; color:#64748b; line-height:1; padding:4px;">✕</button>
-      <h2 style="color:#1f2937; font-size:20px; margin-bottom:24px; font-weight:600;">🔧 配置信息</h2>
+    <div style="background:var(--bg-header); border-radius:16px; padding:32px; max-width:480px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.3); position:relative; border:1px solid var(--border-card);">
+      <button id="close-apikey-modal" style="position:absolute; top:16px; right:16px; background:none; border:none; font-size:20px; cursor:pointer; color:var(--fg-text-muted); line-height:1; padding:4px;">✕</button>
+      <h2 style="color:var(--fg-text-strong); font-size:20px; margin-bottom:24px; font-weight:600;">🔧 配置信息</h2>
       <div style="display:grid; gap:16px;">
         <div>
-          <label style="display:block; color:#64748b; font-size:12px; margin-bottom:6px; font-weight:500;">租户 ID</label>
-          <code id="modal-tenant-id" style="background:#f8fafc; padding:10px 12px; border-radius:8px; display:block; color:#0f172a; font-size:13px; word-break:break-all; border:1px solid #e2e8f0; font-family:monospace;">加载中...</code>
+          <label style="display:block; color:var(--fg-text-muted); font-size:12px; margin-bottom:6px; font-weight:500;">租户 ID</label>
+          <code id="modal-tenant-id" style="background:var(--bg-input); padding:10px 12px; border-radius:8px; display:block; color:var(--fg-text-strong); font-size:13px; word-break:break-all; border:1px solid var(--border-input); font-family:monospace;">加载中...</code>
         </div>
         <div>
-          <label style="display:block; color:#64748b; font-size:12px; margin-bottom:6px; font-weight:500;">API_KEY <button id="toggle-modal-apikey" style="background:none; border:none; cursor:pointer; font-size:14px; padding:0 4px;" title="显示/隐藏">👁️</button></label>
+          <label style="display:block; color:var(--fg-text-muted); font-size:12px; margin-bottom:6px; font-weight:500;">API_KEY <button id="toggle-modal-apikey" style="background:none; border:none; cursor:pointer; font-size:14px; padding:0 4px;" title="显示/隐藏">👁️</button></label>
           <div style="display:flex; gap:8px; align-items:stretch;">
-            <code id="modal-api-key" style="background:#f8fafc; padding:10px 12px; border-radius:8px; display:block; color:#0f172a; font-size:13px; word-break:break-all; border:1px solid #e2e8f0; flex:1; font-family:monospace;" data-is-masked="true">加载中...</code>
-            <button id="copy-apikey-btn" style="background:#667eea; color:white; border:none; border-radius:8px; padding:10px 16px; font-size:14px; cursor:pointer; white-space:nowrap; transition:background 0.2s;"
-              onmouseover="this.style.background='#5568d3'" onmouseout="this.style.background='#667eea'">📋 拷贝</button>
+            <code id="modal-api-key" style="background:var(--bg-input); padding:10px 12px; border-radius:8px; display:block; color:var(--fg-text-strong); font-size:13px; word-break:break-all; border:1px solid var(--border-input); flex:1; font-family:monospace;" data-is-masked="true">加载中...</code>
+            <button id="copy-apikey-btn" style="background:var(--accent); color:white; border:none; border-radius:8px; padding:10px 16px; font-size:14px; cursor:pointer; white-space:nowrap; transition:background 0.2s;"
+              onmouseover="this.style.background='var(--accent-hover)'" onmouseout="this.style.background='var(--accent)'">📋 拷贝</button>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 重命名文件弹窗 -->
-  <div id="rename-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
-    <div style="background:white; border-radius:16px; padding:32px; max-width:480px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.3); position:relative;">
-      <button id="close-rename-modal" style="position:absolute; top:16px; right:16px; background:none; border:none; font-size:20px; cursor:pointer; color:#64748b; line-height:1; padding:4px;">✕</button>
-      <h2 style="color:#1f2937; font-size:20px; margin-bottom:24px; font-weight:600;">✏️ 重命名文件</h2>
-      <div style="display:grid; gap:16px;">
-        <div>
-          <label style="display:block; color:#64748b; font-size:12px; margin-bottom:6px; font-weight:500;">原文件名</label>
-          <code id="rename-original-filename" style="background:#f8fafc; padding:10px 12px; border-radius:8px; display:block; color:#0f172a; font-size:13px; word-break:break-all; border:1px solid #e2e8f0; font-family:monospace;"></code>
-        </div>
-        <div>
-          <label style="display:block; color:#64748b; font-size:12px; margin-bottom:6px; font-weight:500;">新文件名</label>
-          <input id="rename-new-filename" type="text" style="width:100%; padding:10px 12px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'" placeholder="输入新的文件名（保留 .html 或 .htm 后缀）">
-        </div>
-      </div>
-      <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:24px;">
-        <button id="cancel-rename-btn" style="background:#f3f4f6; color:#374151; border:none; border-radius:8px; padding:10px 20px; font-size:14px; cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='#e5e7eb'" onmouseout="this.style.background='#f3f4f6'">取消</button>
-        <button id="confirm-rename-btn" style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border:none; border-radius:8px; padding:10px 20px; font-size:14px; cursor:pointer; transition:opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">确认重命名</button>
       </div>
     </div>
   </div>
@@ -1064,63 +1042,6 @@
         showToast('❌ 下载失败：' + err.message, 'error');
       }
     }
-
-    // 重命名文件功能
-    let currentRenameFilename = null;
-
-    function openRenameModal(filename) {
-      currentRenameFilename = filename;
-      document.getElementById('rename-original-filename').textContent = filename;
-      document.getElementById('rename-new-filename').value = '';
-      document.getElementById('rename-modal').style.display = 'flex';
-      document.getElementById('rename-new-filename').focus();
-    }
-
-    function closeRenameModal() {
-      document.getElementById('rename-modal').style.display = 'none';
-      currentRenameFilename = null;
-    }
-
-    // 绑定重命名弹窗事件
-    document.getElementById('close-rename-modal')?.addEventListener('click', closeRenameModal);
-    document.getElementById('cancel-rename-btn')?.addEventListener('click', closeRenameModal);
-    document.getElementById('rename-modal')?.addEventListener('click', (e) => {
-      if (e.target.id === 'rename-modal') closeRenameModal();
-    });
-
-    document.getElementById('confirm-rename-btn')?.addEventListener('click', async () => {
-      if (!currentRenameFilename) return;
-      const newName = document.getElementById('rename-new-filename').value.trim();
-      if (!newName) {
-        showToast('❌ 请输入新文件名', 'error');
-        return;
-      }
-      if (!newName.match(/^[a-zA-Z0-9_\u4e00-\u9fa5\s-]+\.(html|htm)$/i)) {
-        showToast('❌ 文件名必须以 .html 或 .htm 结尾', 'error');
-        return;
-      }
-
-      try {
-        const res = await fetch('/api/rename', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-API-Key': currentApiKey || ''
-          },
-          body: JSON.stringify({ old_filename: currentRenameFilename, new_filename: newName })
-        });
-        const data = await res.json();
-        if (data.success) {
-          showToast('✅ 重命名成功：' + newName);
-          closeRenameModal();
-          loadPages();
-        } else {
-          showToast('❌ 重命名失败：' + data.error, 'error');
-        }
-      } catch (err) {
-        showToast('❌ 重命名失败：' + err.message, 'error');
-      }
-    });
 
     async function renamePage(filename) {
       const card = event.target.closest('.page-card');
