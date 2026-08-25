@@ -180,3 +180,25 @@ body::before {
 }
 .header::before { top: 6px; left: 6px; }
 .header::after { bottom: 6px; right: 6px; top: auto; left: auto; }
+
+/* 顶部档案标签 */
+.title-tag {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 10px;
+  letter-spacing: 5px;
+  color: #9a7d4a;
+  font-family: 'Palatino', 'Noto Serif SC', serif;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.title-tag::before, .title-tag::after {
+  content: '';
+  flex: 0 0 32px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #b8975c);
+}
+.title-tag::after {
+  background: linear-gradient(90deg, #b8975c, transparent);
+}

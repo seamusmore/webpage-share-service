@@ -177,3 +177,22 @@ body {
 .search-input:focus {
   border-bottom-color: #7a8a6a !important;
 }
+
+/* 顶部档案标签 */
+.title-tag {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: #7a8a6a;
+  font-family: 'Consolas', 'SF Mono', monospace;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.title-tag::before {
+  content: '';
+  display: inline-block;
+  width: 24px; height: 1px;
+  background: #7a8a6a;
+}

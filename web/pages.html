@@ -80,8 +80,6 @@
     .upload-btn:hover { background: var(--btn-primary-bg-hover) !important; }
     .logout-btn { background: var(--btn-danger-bg) !important; color: var(--btn-danger-fg, var(--btn-nav-fg)) !important; margin-left: auto; border: var(--btn-danger-border, var(--btn-nav-border, none)) !important; }
     .logout-btn:hover { background: var(--btn-danger-bg-hover) !important; }
-    .plugin-btn, #plugin-btn { background: var(--btn-nav-bg) !important; }
-    #apikey-btn { background: var(--btn-nav-bg) !important; }
     .user-info {
       padding: 10px 20px; background: var(--user-info-bg);
       border-radius: var(--btn-radius, 8px); font-size: 14px; color: var(--fg-text);
@@ -159,6 +157,19 @@
       font-family: var(--card-index-font, 'Consolas', monospace);
       margin-bottom: 6px; text-transform: uppercase;
       display: var(--card-index-display, none);
+    }
+    .title-tag {
+      display: none;
+      font-size: 10px; letter-spacing: 3px; color: var(--accent);
+      text-transform: uppercase; font-family: 'Consolas', monospace;
+      margin-bottom: 6px; font-weight: 700;
+    }
+    .corner {
+      display: none;
+      position: absolute; bottom: 6px; right: 6px;
+      width: 14px; height: 14px; pointer-events: none;
+      border-right: 1px solid var(--corner-color, #3a3a3a);
+      border-bottom: 1px solid var(--corner-color, #3a3a3a);
     }
     .page-card h3 {
       color: var(--fg-text-strong); font-size: 18px; margin-bottom: 8px;
@@ -336,7 +347,10 @@
   <div class="container">
     <div class="header">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h1><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>页面列表</span><span id="page-count" class="page-count" title="文件总数">0</span><button id="refresh-btn" class="refresh-btn" onclick="refreshPages()" title="刷新列表"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button></h1>
+        <div>
+          <div id="title-tag" class="title-tag"></div>
+          <h1><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>页面列表</span><span id="page-count" class="page-count" title="文件总数">0</span><button id="refresh-btn" class="refresh-btn" onclick="refreshPages()" title="刷新列表"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button></h1>
+        </div>
         <div class="nav" style="margin: 0;">
           <span id="user-info" class="user-info" style="display:none;"></span>
           <button id="theme-btn" class="theme-btn" title="切换主题">
@@ -431,16 +445,51 @@
       { id: 'genshin',   name: '原神',     en: 'Genshin',   desc: '金紫华丽' }
     ];
 
+    // 各主题文案（照搬小样原稿）
+    const THEME_TEXT = {
+      classic:   { tag: '', ph: '输入名称搜索...',       search: '搜索',     open: '🚀 打开页面', fileP: '📄 ', timeP: '🕐 ', timeFmt: 'default' },
+      light:     { tag: '', ph: '输入名称搜索...',       search: '搜索',     open: '🚀 打开页面', fileP: '📄 ', timeP: '🕐 ', timeFmt: 'default' },
+      dark:      { tag: '', ph: '输入名称搜索...',       search: '搜索',     open: '🚀 打开页面', fileP: '📄 ', timeP: '🕐 ', timeFmt: 'default' },
+      arknights: { tag: '// ARCHIVE_TERMINAL', ph: '> query: name_keyword', search: 'EXEC', open: 'OPEN', fileP: '> ', timeP: '> ', timeFmt: 'default' },
+      endfield:  { tag: 'TALOS-II DATA ARCHIVE', ph: 'search_by_name', search: 'SEARCH', open: 'OPEN', fileP: 'fname: ', timeP: 'mtime: ', timeFmt: 'default' },
+      genshin:   { tag: '✦ Teyvat Archive ✦', ph: '请输入页面前缀……', search: '搜索', open: '打开页面', fileP: '', timeP: '', timeFmt: 'zh-dot' }
+    };
+
+    function themeText(key) {
+      return (THEME_TEXT[currentTheme] || THEME_TEXT.classic)[key] ?? '';
+    }
+
+    function formatDate(d, fmt) {
+      const dt = new Date(d);
+      if (fmt === 'zh-dot') {
+        const hh = String(dt.getHours()).padStart(2, '0');
+        const mm = String(dt.getMinutes()).padStart(2, '0');
+        return dt.getFullYear() + '年' + (dt.getMonth() + 1) + '月' + dt.getDate() + '日 · ' + hh + ':' + mm;
+      }
+      return dt.toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    }
+
     function applyTheme(themeId) {
       if (!THEMES.find(t => t.id === themeId)) themeId = 'classic';
       currentTheme = themeId;
       document.documentElement.setAttribute('data-theme', themeId);
       const link = document.getElementById('theme-css');
       if (link) link.href = '/themes/' + themeId + '.css';
+      // 更新 header 文案
+      const si = document.getElementById('search-input');
+      if (si) si.placeholder = themeText('ph');
+      const sb = document.getElementById('search-btn');
+      if (sb) sb.textContent = themeText('search');
+      const tt = document.getElementById('title-tag');
+      if (tt) tt.textContent = themeText('tag');
       // 高亮选中项
       document.querySelectorAll('.theme-option').forEach(el => {
         el.classList.toggle('active', el.dataset.theme === themeId);
       });
+      // 重新渲染卡片（应用新文案）
+      if (allPagesData && allPagesData.length) {
+        filterPages();
+      }
     }
 
     async function loadThemePreference() {
@@ -806,7 +855,7 @@
         if (a.is_favorite !== b.is_favorite) return a.is_favorite ? -1 : 1;
         return new Date(b.createdAt) - new Date(a.createdAt);
       });
-      pages.forEach(page => {
+      pages.forEach((page, i) => {
         const filename = page.filename;
         let displayName = page.display_name || filename.replace(/\.(html|htm)$/i, '');
         displayName = displayName.replace(/^\d+-upload-/, '');
@@ -817,20 +866,32 @@
         const starCls = isFav ? 'star-active' : 'star-idle';
         const starSvg = '<svg class="' + starCls + '" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
 
+        // 主题文案
+        const filePrefix = themeText('fileP');
+        const timePrefix = themeText('timeP');
+        const openText = themeText('open');
+        const idx = String(i + 1).padStart(3, '0');
+        let cardIdx = '';
+        if (currentTheme === 'arknights') cardIdx = '// DOC_' + idx;
+        else if (currentTheme === 'endfield') cardIdx = 'DOC_' + idx;
+        else if (currentTheme === 'genshin') cardIdx = '✦ Doc.' + idx;
+
         const card = document.createElement('div');
         card.className = 'page-card';
         const tenantId = currentUser?.tenant_id || currentUser?.open_id || 'default';
         const shareUrl = window.location.origin + '/' + tenantId + '/pages/' + encodeURIComponent(filename);
-        const createdDate = page.createdAt ? new Date(page.createdAt).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+        const createdDate = page.createdAt ? formatDate(page.createdAt, themeText('timeFmt')) : '';
         card.innerHTML = '<button class="favorite-btn" onclick="toggleFavorite(\'' + filename + '\', this)" title="收藏">' + starSvg + '</button>'
+          + '<div class="card-index">' + cardIdx + '</div>'
           + '<h3 data-display-name="' + displayName + '">' + displayName + ' <span class="rename-icon" onclick="renamePage(\'' + filename + '\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span></h3>'
-          + '<p style="font-size: 11px; color: var(--meta-filename); margin-top: 2px; margin-bottom: 0;">📄 ' + filename + '</p>'
-          + (createdDate ? '<p style="font-size: 11px; color: var(--meta-time); margin-top: 1px; margin-bottom: 12px;">🕐 ' + createdDate + '</p>' : '<p style="margin-bottom: 12px;"></p>')
-          + '<div class="actions"><a class="open-btn" href="/' + tenantId + '/pages/' + encodeURIComponent(filename) + '" target="_blank">🚀 打开页面</a>'
+          + '<p style="font-size: 11px; color: var(--meta-filename); margin-top: 2px; margin-bottom: 0;">' + filePrefix + filename + '</p>'
+          + (createdDate ? '<p style="font-size: 11px; color: var(--meta-time); margin-top: 1px; margin-bottom: 12px;">' + timePrefix + createdDate + '</p>' : '<p style="margin-bottom: 12px;"></p>')
+          + '<div class="actions"><a class="open-btn" href="/' + tenantId + '/pages/' + encodeURIComponent(filename) + '" target="_blank">' + openText + '</a>'
           + '<button class="share-btn" onclick="sharePage(\'' + filename + '\', \'' + shareUrl + '\')" title="分享"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>'
           + '<button class="download-btn" onclick="downloadPage(\'' + filename + '\')" title="下载"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>'
           + '<button class="replace-btn" onclick="replacePage(\'' + filename + '\')" title="更新文件"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>'
-          + '<button class="delete-btn" onclick="deletePage(\'' + filename + '\')" title="删除"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div>';
+          + '<button class="delete-btn" onclick="deletePage(\'' + filename + '\')" title="删除"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div>'
+          + '<div class="corner"></div>';
         container.appendChild(card);
       });
     }

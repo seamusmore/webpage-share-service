@@ -179,3 +179,57 @@ body {
   width: 4px;
   background: #ff6b35;
 }
+
+/* ===== 原稿逐项还原 ===== */
+
+/* 顶部终端标签 */
+.title-tag {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: #ff6b35;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-family: 'Consolas', monospace;
+  margin-bottom: 6px;
+}
+
+/* 卡片 HUD 折角 */
+.corner { display: block; }
+
+/* header 20px 大斜切（覆盖通用 12px） */
+.header {
+  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+}
+
+/* 徽章尺寸 */
+.page-count {
+  min-width: 28px; height: 24px; padding: 0 10px;
+  font-size: 13px; font-weight: 700;
+}
+
+/* 卡片编号 */
+.card-index {
+  font-size: 9px; letter-spacing: 2px; color: #666;
+}
+
+/* 导航按钮 */
+.nav a, .nav label, .nav button {
+  font-size: 12px; padding: 9px 18px;
+}
+
+/* 打开按钮 */
+.open-btn { font-size: 12px; }
+
+/* 图标按钮高度 */
+.actions .share-btn, .actions .download-btn, .actions .replace-btn, .actions .delete-btn {
+  height: 36px;
+}
+
+/* 收藏星位置（给 corner 让位） */
+.favorite-btn { top: 14px; right: 40px; }
+
+/* 搜索按钮单侧斜切 */
+.search-btn {
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 0 100%);
+}
