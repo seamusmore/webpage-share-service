@@ -47,7 +47,7 @@
   --refresh-fg: #9a7d4a;
   --refresh-bg-hover: linear-gradient(180deg, #d4b678 0%, #b8975c 100%);
   --refresh-border-hover: #b8975c;
-  --refresh-fg-hover: #fff8dc;
+  --refresh-fg-hover: #9a7d4a;
   --refresh-radius: 50%;
 
   --user-info-bg: rgba(184, 151, 92, 0.2);
@@ -390,9 +390,10 @@ body { padding: 32px 20px; }
   box-shadow: inset 0 2px 4px rgba(154, 125, 74, 0.1);
 }
 
-/* 上传按钮：深棕边框 */
+/* 上传按钮：深棕边框 + 深色文字阴影 */
 .nav .upload-btn {
   border-color: #7a6338;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* 打开按钮：transition 0.25s */
