@@ -4,250 +4,368 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>页面列表 - 内部网页服务</title>
+  <link id="theme-css" rel="stylesheet" href="/themes/classic.css">
   <style>
+    /* ============ 骨架 CSS（结构性，不含颜色/装饰） ============ */
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: var(--font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif);
+      background: var(--bg-body);
       min-height: 100vh;
-      padding: 20px;
+      padding: var(--body-padding, 20px);
+      color: var(--fg-text);
+      transition: background 0.25s ease, color 0.25s ease;
     }
-    .container { max-width: 1200px; margin: 0 auto; }
+    .container { max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
+
     .header {
-      background: white; border-radius: 16px; padding: 32px;
-      margin-bottom: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      background: var(--bg-header);
+      border-radius: var(--radius-header, 16px);
+      padding: var(--header-padding, 32px);
+      margin-bottom: var(--header-margin-bottom, 24px);
+      border: var(--border-header, none);
+      box-shadow: var(--shadow-header, 0 10px 40px rgba(0,0,0,0.2));
+      position: relative;
     }
-    .header h1 { color: #1f2937; font-size: 28px; margin-bottom: 8px; }
-    .header p { color: #6b7280; font-size: 14px; }
+    .header h1 {
+      color: var(--fg-text-strong);
+      font-size: var(--h1-size, 28px);
+      font-weight: var(--h1-weight, 700);
+      margin-bottom: 8px;
+      letter-spacing: var(--h1-letter-spacing, 0);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .header h1 svg { color: var(--accent); flex-shrink: 0; }
+    .header p { color: var(--fg-text-muted); font-size: 14px; }
+
+    .page-count {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 22px; height: 22px; padding: 0 7px;
+      background: var(--badge-bg);
+      border: 1px solid var(--badge-border);
+      border-radius: var(--badge-radius, 999px);
+      color: var(--badge-fg);
+      font-size: 12px; font-weight: 600; line-height: 1;
+      font-family: var(--badge-font, inherit);
+      letter-spacing: var(--badge-letter-spacing, 0);
+      margin-left: 8px; vertical-align: 3px;
+    }
+    .refresh-btn {
+      margin-left: 10px; vertical-align: 2px;
+      width: 32px; height: 32px; padding: 0;
+      background: var(--refresh-bg);
+      border: 1px solid var(--refresh-border);
+      border-radius: var(--refresh-radius, 8px);
+      color: var(--refresh-fg); cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .refresh-btn:hover { background: var(--refresh-bg-hover); border-color: var(--refresh-border-hover); color: var(--refresh-fg-hover); }
+
     .nav { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; align-items: center; }
     .nav a, .nav label, .nav button {
-      padding: 10px 20px; background: #667eea; color: white;
-      text-decoration: none; border-radius: 8px; font-size: 14px;
-      transition: background 0.2s; cursor: pointer; display: inline-block; border: none;
+      padding: 10px 20px; background: var(--btn-nav-bg); color: var(--btn-nav-fg);
+      text-decoration: none; border-radius: var(--btn-radius, 8px); font-size: 14px;
+      transition: all 0.2s; cursor: pointer; display: inline-block;
+      border: var(--btn-nav-border, none);
+      letter-spacing: var(--btn-letter-spacing, 0);
+      text-transform: var(--btn-text-transform, none);
+      font-weight: var(--btn-weight, 500);
+      font-family: var(--btn-font, inherit);
     }
-    .nav a:hover, .nav label:hover, .nav button:hover { background: #5568d3; }
+    .nav a:hover, .nav label:hover, .nav button:hover { background: var(--btn-nav-bg-hover); }
     #file-input { display: none; }
-    .upload-btn { background: #10b981; }
-    .upload-btn:hover { background: #059669; }
-    .logout-btn { background: #ef4444; margin-left: auto; }
-    .logout-btn:hover { background: #dc2626; }
-    .user-info { color: #6b7280; font-size: 13px; margin-left: 12px; }
-    .pages-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;
+    .upload-btn { background: var(--btn-primary-bg) !important; color: var(--btn-primary-fg) !important; }
+    .upload-btn:hover { background: var(--btn-primary-bg-hover) !important; }
+    .logout-btn { background: var(--btn-danger-bg) !important; color: var(--btn-danger-fg, var(--btn-nav-fg)) !important; margin-left: auto; border: var(--btn-danger-border, var(--btn-nav-border, none)) !important; }
+    .logout-btn:hover { background: var(--btn-danger-bg-hover) !important; }
+    .plugin-btn, #plugin-btn { background: var(--btn-nav-bg) !important; }
+    #apikey-btn { background: var(--btn-nav-bg) !important; }
+    .user-info {
+      padding: 10px 20px; background: var(--user-info-bg);
+      border-radius: var(--btn-radius, 8px); font-size: 14px; color: var(--fg-text);
+      display: flex; align-items: center; gap: 8px;
+      border: var(--user-info-border, none);
     }
+    .user-info img { width: 24px; height: 24px; border-radius: 50%; }
+
+    .search-row {
+      display: flex; gap: 10px; margin-top: 16px; position: relative;
+      padding-top: var(--search-padding-top, 0);
+      border-top: var(--search-border-top, none);
+    }
+    .search-row > svg {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      pointer-events: none; color: var(--search-icon-color);
+    }
+    .search-input {
+      flex: 1; padding: 10px 36px 10px 40px;
+      border: 2px solid var(--search-border);
+      border-radius: var(--search-radius, 10px); font-size: 14px; outline: none;
+      background: var(--search-bg); color: var(--fg-text);
+      transition: border-color 0.2s;
+      font-family: var(--search-font, inherit);
+    }
+    .search-input::placeholder { color: var(--search-placeholder); }
+    .search-input:focus { border-color: var(--accent); }
+    .search-clear-btn {
+      position: absolute; right: 116px; top: 50%; transform: translateY(-50%);
+      font-size: 16px; cursor: pointer; color: var(--search-icon-color);
+      display: none; user-select: none; line-height: 1;
+    }
+    .search-btn {
+      padding: 10px 24px; background: var(--btn-search-bg); color: var(--btn-search-fg);
+      border: var(--btn-search-border, none);
+      border-radius: var(--search-radius, 10px); font-size: 14px; cursor: pointer;
+      transition: all 0.2s; white-space: nowrap;
+      letter-spacing: var(--btn-letter-spacing, 0);
+      text-transform: var(--btn-text-transform, none);
+      font-family: var(--btn-font, inherit);
+      font-weight: var(--btn-weight, 500);
+    }
+    .search-btn:hover { opacity: 0.9; }
+
+    .pages-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--grid-gap, 24px); }
+
     .page-card {
-      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
-      border: 1px solid rgba(102, 126, 234, 0.1);
+      background: var(--bg-card);
+      border-radius: var(--radius-card, 16px);
+      padding: var(--card-padding, 24px);
+      border: 1px solid var(--border-card);
+      box-shadow: var(--shadow-card);
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      overflow: hidden;
+      position: relative; overflow: hidden;
     }
     .page-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-      transform: scaleX(0);
-      transition: transform 0.3s ease;
+      content: var(--card-top-accent, '');
+      position: absolute; top: 0; left: 0; right: 0;
+      height: var(--card-top-accent-height, 4px);
+      background: var(--card-top-accent-bg, transparent);
+      transform: scaleX(var(--card-top-accent-scale, 0));
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      opacity: var(--card-top-accent-opacity, 1);
     }
     .page-card:hover {
       transform: translateY(-6px);
-      box-shadow: 0 12px 40px rgba(102, 126, 234, 0.25);
+      box-shadow: var(--shadow-card-hover);
+      border-color: var(--border-card-hover);
+      background: var(--bg-card-hover);
     }
-    .page-card:hover::before {
-      transform: scaleX(1);
+    .page-card:hover::before { transform: scaleX(1); opacity: 1; }
+
+    .card-index {
+      font-size: 10px; letter-spacing: 3px; color: var(--card-index-color);
+      font-family: var(--card-index-font, 'Consolas', monospace);
+      margin-bottom: 6px; text-transform: uppercase;
+      display: var(--card-index-display, none);
     }
     .page-card h3 {
-      color: #1f2937;
-      font-size: 18px;
-      margin-bottom: 8px;
-      word-break: break-all;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      color: var(--fg-text-strong); font-size: 18px; margin-bottom: 8px;
+      word-break: break-all; font-weight: 600;
+      display: flex; align-items: center; gap: 8px;
+      letter-spacing: var(--h3-letter-spacing, 0);
+      font-family: var(--h3-font, inherit);
     }
-    .page-card .rename-icon {
-      cursor: pointer;
-      font-size: 14px;
-      opacity: 0.5;
-      transition: opacity 0.2s, transform 0.2s;
-      flex-shrink: 0;
-    }
-    .page-card .rename-icon:hover {
-      opacity: 1;
-      transform: scale(1.2);
-    }
-    .page-card .rename-input {
-      flex: 1;
-      padding: 4px 8px;
-      border: 2px solid #667eea;
-      border-radius: 6px;
-      font-size: 18px;
-      font-weight: 600;
-      color: #1f2937;
-      outline: none;
-      font-family: inherit;
+    .rename-icon { cursor: pointer; font-size: 14px; opacity: 0.5; transition: opacity 0.2s, transform 0.2s; flex-shrink: 0; color: var(--icon-idle); }
+    .rename-icon:hover { opacity: 1; transform: scale(1.2); color: var(--accent); }
+    .rename-input {
+      flex: 1; padding: 4px 8px; border: 2px solid var(--accent); border-radius: 6px;
+      font-size: 18px; font-weight: 600; color: var(--fg-text-strong);
+      outline: none; font-family: inherit;
+      background: var(--search-bg);
     }
     .page-card p {
-      color: #9ca3af;
-      font-size: 13px;
-      margin-bottom: 20px;
+      color: var(--fg-text-muted); font-size: 13px; margin-bottom: 20px;
       font-family: 'Monaco', 'Consolas', monospace;
     }
-    .page-card .actions {
-      display: flex;
-      gap: 10px;
-      align-items: center;
+    .actions { display: flex; gap: 10px; align-items: center; }
+    .open-btn {
+      flex: 1; display: inline-block; padding: 10px 20px;
+      background: var(--btn-open-bg);
+      color: var(--btn-open-fg); text-decoration: none;
+      border-radius: var(--btn-radius, 10px); font-size: 14px; font-weight: 500;
+      text-align: center; transition: all 0.3s ease;
+      box-shadow: var(--btn-open-shadow);
+      border: var(--btn-open-border, none);
+      letter-spacing: var(--btn-letter-spacing, 0);
+      text-transform: var(--btn-text-transform, none);
+      font-family: var(--btn-font, inherit);
     }
-    .page-card .actions a {
-      flex: 1;
-      display: inline-block;
-      padding: 10px 20px;
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      color: white;
-      text-decoration: none;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 500;
-      text-align: center;
-      transition: all 0.3s ease;
-      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
-    }
-    .page-card .actions a:hover {
-      background: linear-gradient(135deg, #059669 0%, #047857 100%);
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    .open-btn:hover {
+      background: var(--btn-open-bg-hover);
+      box-shadow: var(--btn-open-shadow-hover);
       transform: translateY(-1px);
     }
-    .page-card .actions .download-btn,
-    .page-card .actions .delete-btn,
-    .page-card .actions .share-btn,
-    .page-card .actions .replace-btn {
-      flex: 0 0 34px;
-      width: 34px;
-      height: 34px;
-      padding: 0;
-      border: 1px solid;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .actions .icon-btn {
+      flex: 0 0 34px; width: 34px; height: 34px; padding: 0;
+      border: 1px solid var(--btn-icon-border);
+      border-radius: var(--btn-icon-radius, 8px);
+      cursor: pointer; transition: all 0.3s ease;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--btn-icon-bg);
+      color: var(--btn-icon-fg);
     }
-    .page-card .actions .download-btn {
-      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
-      color: #3b82f6;
-      border-color: rgba(59, 130, 246, 0.2);
+    /* 各功能按钮默认配色（可由主题覆盖） */
+    .icon-btn.share {
+      background: var(--btn-share-bg, var(--btn-icon-bg));
+      color: var(--btn-share-fg, var(--btn-icon-fg));
+      border-color: var(--btn-share-border, var(--btn-icon-border));
     }
-    .page-card .actions .download-btn:hover {
-      background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%) !important;
-      border-color: rgba(59, 130, 246, 0.4);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
-      transform: translateY(-1px);
+    .icon-btn.download {
+      background: var(--btn-download-bg, var(--btn-icon-bg));
+      color: var(--btn-download-fg, var(--btn-icon-fg));
+      border-color: var(--btn-download-border, var(--btn-icon-border));
     }
-    .page-card .actions .delete-btn,
-      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%) !important;
-      color: #ef4444;
-      border-color: rgba(239, 68, 68, 0.2);
+    .icon-btn.replace {
+      background: var(--btn-replace-bg, var(--btn-icon-bg));
+      color: var(--btn-replace-fg, var(--btn-icon-fg));
+      border-color: var(--btn-replace-border, var(--btn-icon-border));
     }
-    .page-card .actions .delete-btn:hover {
-      background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%) !important;
-      border-color: rgba(239, 68, 68, 0.4);
-      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
-      transform: translateY(-1px);
+    .icon-btn.delete {
+      background: var(--btn-delete-bg, var(--btn-icon-bg));
+      color: var(--btn-delete-fg, var(--btn-icon-fg));
+      border-color: var(--btn-delete-border, var(--btn-icon-border));
     }
-    .page-card .actions .share-btn {
-      background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%) !important;
-      color: #4a78d9;
-      border-color: rgba(74, 120, 217, 0.2);
+    .icon-btn.share:hover { background: var(--btn-share-bg-hover); border-color: var(--btn-share-border-hover); color: var(--btn-share-fg-hover); box-shadow: var(--btn-share-shadow-hover); }
+    .icon-btn.download:hover { background: var(--btn-download-bg-hover); border-color: var(--btn-download-border-hover); color: var(--btn-download-fg-hover); box-shadow: var(--btn-download-shadow-hover); }
+    .icon-btn.replace:hover { background: var(--btn-replace-bg-hover); border-color: var(--btn-replace-border-hover); color: var(--btn-replace-fg-hover); box-shadow: var(--btn-replace-shadow-hover); }
+    .icon-btn.delete:hover { background: var(--btn-delete-bg-hover); border-color: var(--btn-delete-border-hover); color: var(--btn-delete-fg-hover); box-shadow: var(--btn-delete-shadow-hover); }
+
+    .favorite-btn {
+      position: absolute; top: 16px; right: 16px;
+      background: none; border: none; cursor: pointer; padding: 4px;
+      line-height: 1; transition: transform 0.2s;
     }
-    .page-card .actions .share-btn:hover {
-      background: linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 100%) !important;
-      border-color: rgba(74, 120, 217, 0.4);
-      box-shadow: 0 4px 12px rgba(74, 120, 217, 0.25);
-      transform: translateY(-1px);
-    }
-    .page-card .actions .replace-btn {
-      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
-      color: #d97706;
-      border-color: rgba(217, 119, 6, 0.2);
-    }
-    .page-card .actions .replace-btn:hover {
-      background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%) !important;
-      border-color: rgba(217, 119, 6, 0.4);
-      box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);
-      transform: translateY(-1px);
-    }
-    .page-card .favorite-btn {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 4px;
-      line-height: 1;
-      transition: transform 0.2s;
-    }
-    .page-card .favorite-btn:hover {
-      transform: scale(1.2);
-    }
+    .favorite-btn:hover { transform: scale(1.2); }
+    .favorite-btn .star-active { fill: var(--star-active); stroke: var(--star-active); }
+    .favorite-btn .star-idle { fill: none; stroke: var(--star-idle); }
+
     .empty-state {
-      background: white;
-      border-radius: 16px;
-      padding: 60px 40px;
-      text-align: center;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      background: var(--bg-card); border-radius: var(--radius-card, 16px);
+      padding: 60px 40px; text-align: center;
+      box-shadow: var(--shadow-card);
+      border: 1px solid var(--border-card);
+      grid-column: 1 / -1;
     }
     .empty-state .icon { font-size: 64px; margin-bottom: 16px; }
-    .empty-state h2 { color: #1f2937; font-size: 20px; margin-bottom: 8px; }
-    .empty-state p { color: #6b7280; font-size: 14px; }
+    .empty-state h2 { color: var(--fg-text-strong); font-size: 20px; margin-bottom: 8px; }
+    .empty-state p { color: var(--fg-text-muted); font-size: 14px; }
+
     .toast {
       position: fixed; bottom: 20px; right: 20px;
       padding: 16px 24px; border-radius: 12px; color: white;
       font-size: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.2);
       z-index: 1000; transform: translateY(100px); opacity: 0;
-      transition: transform 0.3s, opacity 0.3s;
-      font-weight: 500;
+      transition: transform 0.3s, opacity 0.3s; font-weight: 500;
     }
     .toast.show { transform: translateY(0); opacity: 1; }
     .toast.success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
     .toast.error { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
-    .user-info { padding: 10px 20px; background: #f3f4f6; border-radius: 8px; font-size: 14px; color: #1f2937; display: flex; align-items: center; gap: 8px; }
-    .user-info img { width: 24px; height: 24px; border-radius: 50%; }
+
+    /* ============ 主题选择器 ============ */
+    .theme-btn {
+      padding: 10px 20px; background: var(--btn-nav-bg); color: var(--btn-nav-fg);
+      border: var(--btn-nav-border, none);
+      border-radius: var(--btn-radius, 8px); font-size: 14px; cursor: pointer;
+      transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .theme-btn:hover { background: var(--btn-nav-bg-hover); }
+
+    .theme-modal {
+      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.5); z-index: 2000;
+      align-items: center; justify-content: center;
+    }
+    .theme-modal.show { display: flex; }
+    .theme-modal-inner {
+      background: var(--bg-card); border-radius: 16px;
+      padding: 28px; max-width: 720px; width: 92%;
+      max-height: 84vh; overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      position: relative; border: 1px solid var(--border-card);
+    }
+    .theme-modal-title { color: var(--fg-text-strong); font-size: 20px; margin-bottom: 20px; font-weight: 600; }
+    .theme-modal-close {
+      position: absolute; top: 14px; right: 14px;
+      background: none; border: none; font-size: 20px; cursor: pointer;
+      color: var(--fg-text-muted); line-height: 1; padding: 4px;
+    }
+    .theme-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;
+    }
+    .theme-option {
+      border: 2px solid var(--border-card); border-radius: 12px;
+      padding: 14px; cursor: pointer; transition: all 0.2s;
+      background: var(--bg-header);
+    }
+    .theme-option:hover { transform: translateY(-2px); border-color: var(--accent); }
+    .theme-option.active { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .theme-swatch {
+      height: 56px; border-radius: 8px; margin-bottom: 8px;
+      border: 1px solid rgba(0, 0, 0, 0.08); overflow: hidden;
+      position: relative;
+    }
+    .theme-swatch::after {
+      content: ''; position: absolute; bottom: 6px; left: 6px; right: 6px;
+      height: 10px; border-radius: 3px;
+      background: rgba(255, 255, 255, 0.85);
+    }
+    .theme-name {
+      font-size: 13px; font-weight: 600; color: var(--fg-text-strong);
+      text-align: center; letter-spacing: 0.5px;
+    }
+    .theme-name-en {
+      font-size: 10px; color: var(--fg-text-muted);
+      text-align: center; margin-top: 2px; letter-spacing: 1px;
+      text-transform: uppercase; font-family: 'Consolas', monospace;
+    }
+    /* swatch 配色预览（不切换主题） */
+    .swatch-classic   { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .swatch-light     { background: linear-gradient(135deg, #f6f7fb 0%, #e0e7ff 100%); }
+    .swatch-dark      { background: linear-gradient(135deg, #1a1b2e 0%, #2d3252 100%); }
+    .swatch-arknights { background: linear-gradient(135deg, #0a0a0a 0%, #ff6b35 100%); }
+    .swatch-endfield  { background: linear-gradient(135deg, #edece6 0%, #7a8a6a 100%); }
+    .swatch-genshin   { background: linear-gradient(135deg, #2b3a55 0%, #d4b678 100%); }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h1><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -4px; margin-right: 6px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>页面列表</h1>
+        <h1><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>页面列表</span><span id="page-count" class="page-count" title="文件总数">0</span><button id="refresh-btn" class="refresh-btn" onclick="refreshPages()" title="刷新列表"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button></h1>
         <div class="nav" style="margin: 0;">
           <span id="user-info" class="user-info" style="display:none;"></span>
-          <a id="plugin-btn" href="https://github.com/seamusmore/hermes-webpage-share" target="_blank" style="display:none; background: #667eea; color: white; border: none; border-radius: 8px; padding: 10px 20px; font-size: 14px; cursor: pointer; transition: background 0.2s; text-decoration: none;"
-            onmouseover="this.style.background='#5568d3'" onmouseout="this.style.background='#667eea'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>Agent接入</a>
-          <button id="apikey-btn" style="display:none; background: #667eea; color: white; border: none; border-radius: 8px; padding: 10px 20px; font-size: 14px; cursor: pointer; transition: background 0.2s;"
-            onmouseover="this.style.background='#5568d3'" onmouseout="this.style.background='#667eea'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;"><circle cx="8" cy="15" r="4"/><line x1="10.85" y1="12.15" x2="19" y2="4"/><line x1="18" y1="5" x2="20" y2="7"/><line x1="15" y1="8" x2="17" y2="10"/></svg>API Key</button>
+          <button id="theme-btn" class="theme-btn" title="切换主题">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="8" r="1.2" fill="currentColor"/><circle cx="16.5" cy="10.5" r="1.2" fill="currentColor"/><circle cx="16.5" cy="14.5" r="1.2" fill="currentColor"/><circle cx="12" cy="17" r="1.2" fill="currentColor"/><circle cx="7.5" cy="14.5" r="1.2" fill="currentColor"/><circle cx="7.5" cy="10.5" r="1.2" fill="currentColor"/></svg>
+            主题
+          </button>
+          <a id="plugin-btn" href="https://github.com/seamusmore/hermes-webpage-share" target="_blank" style="display:none;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>Agent接入</a>
+          <button id="apikey-btn" style="display:none;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;"><circle cx="8" cy="15" r="4"/><line x1="10.85" y1="12.15" x2="19" y2="4"/><line x1="18" y1="5" x2="20" y2="7"/><line x1="15" y1="8" x2="17" y2="10"/></svg>API Key</button>
           <button id="logout-btn" class="logout-btn" style="display:none;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>退出登录</button>
           <label for="file-input" class="upload-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>上传 HTML</label>
           <input type="file" id="file-input" accept=".html,.htm">
         </div>
       </div>
-      <div style="display: flex; gap: 10px; margin-top: 16px; position: relative;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="search-input" placeholder="输入名称搜索..." style="flex: 1; padding: 10px 36px 10px 40px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'" onkeydown="if(event.key==='Enter')filterPages()" oninput="toggleClearBtn()">
-        <span id="search-clear-btn" onclick="clearSearch()" style="position: absolute; right: 116px; top: 50%; transform: translateY(-50%); font-size: 16px; cursor: pointer; color: #9ca3af; display: none; user-select: none; line-height: 1;">✕</span>
-        <button id="search-btn" onclick="filterPages()" style="padding: 10px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 14px; cursor: pointer; transition: opacity 0.2s; white-space: nowrap;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">搜索</button>
+      <div class="search-row">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-input" class="search-input" placeholder="输入名称搜索..." onkeydown="if(event.key==='Enter')filterPages()" oninput="toggleClearBtn()">
+        <span id="search-clear-btn" class="search-clear-btn" onclick="clearSearch()">✕</span>
+        <button id="search-btn" class="search-btn" onclick="filterPages()">搜索</button>
       </div>
     </div>
     <div id="pages-container" class="pages-grid"></div>
   </div>
   <div id="toast" class="toast"></div>
+
+  <!-- 主题选择器 -->
+  <div id="theme-modal" class="theme-modal">
+    <div class="theme-modal-inner">
+      <button id="close-theme-modal" class="theme-modal-close">✕</button>
+      <h2 class="theme-modal-title">🎨 选择主题</h2>
+      <div class="theme-grid" id="theme-grid"></div>
+    </div>
+  </div>
 
   <!-- API Key 管理弹窗 -->
   <div id="apikey-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
@@ -298,6 +416,88 @@
     let currentUser = null;
     let currentApiKey = null;
     let allPagesData = [];
+    let currentTheme = 'classic';
+
+    // ============ 主题管理 ============
+    const THEMES = [
+      { id: 'classic',   name: '原版',     en: 'Classic',   desc: '紫蓝渐变' },
+      { id: 'light',     name: '浅色',     en: 'Light',     desc: '清爽工具风' },
+      { id: 'dark',      name: '深色',     en: 'Dark',      desc: '仪表盘感' },
+      { id: 'arknights', name: '方舟',     en: 'Arknights', desc: '黑橙工业' },
+      { id: 'endfield',  name: '终末地',   en: 'Endfield',  desc: '米白档案' },
+      { id: 'genshin',   name: '原神',     en: 'Genshin',   desc: '金紫华丽' }
+    ];
+
+    function applyTheme(themeId) {
+      if (!THEMES.find(t => t.id === themeId)) themeId = 'classic';
+      currentTheme = themeId;
+      document.documentElement.setAttribute('data-theme', themeId);
+      const link = document.getElementById('theme-css');
+      if (link) link.href = '/themes/' + themeId + '.css';
+      // 高亮选中项
+      document.querySelectorAll('.theme-option').forEach(el => {
+        el.classList.toggle('active', el.dataset.theme === themeId);
+      });
+    }
+
+    async function loadThemePreference() {
+      try {
+        const res = await fetch('/api/theme', { headers: { 'X-API-Key': currentApiKey || '' } });
+        const data = await res.json();
+        if (data && data.theme) applyTheme(data.theme);
+        else applyTheme('classic');
+      } catch (err) {
+        console.warn('加载主题偏好失败，回退默认', err);
+        applyTheme('classic');
+      }
+    }
+
+    async function saveThemePreference(themeId) {
+      try {
+        await fetch('/api/theme', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-API-Key': currentApiKey || '' },
+          body: JSON.stringify({ theme: themeId })
+        });
+      } catch (err) {
+        console.warn('保存主题失败', err);
+        showToast('⚠️ 主题未保存（网络异常）', 'error');
+      }
+    }
+
+    function renderThemeGrid() {
+      const grid = document.getElementById('theme-grid');
+      if (!grid) return;
+      grid.innerHTML = THEMES.map(t =>
+        '<div class="theme-option" data-theme="' + t.id + '" onclick="selectTheme(\'' + t.id + '\')">'
+        + '<div class="theme-swatch swatch-' + t.id + '"></div>'
+        + '<div class="theme-name">' + t.name + '</div>'
+        + '<div class="theme-name-en">' + t.en + ' · ' + t.desc + '</div>'
+        + '</div>'
+      ).join('');
+    }
+
+    async function selectTheme(themeId) {
+      applyTheme(themeId);
+      await saveThemePreference(themeId);
+      showToast('🎨 已切换到「' + (THEMES.find(t => t.id === themeId)?.name || themeId) + '」');
+    }
+
+    // 主题弹窗事件
+    document.addEventListener('DOMContentLoaded', () => {
+      renderThemeGrid();
+      document.getElementById('theme-btn')?.addEventListener('click', () => {
+        document.getElementById('theme-modal').classList.add('show');
+      });
+      document.getElementById('close-theme-modal')?.addEventListener('click', () => {
+        document.getElementById('theme-modal').classList.remove('show');
+      });
+      document.getElementById('theme-modal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'theme-modal') {
+          document.getElementById('theme-modal').classList.remove('show');
+        }
+      });
+    });
     
     // 强制登录检查 - 未登录重定向到首页（带原页面地址）
     async function forceAuth() {
@@ -348,7 +548,10 @@
       
       // 加载配置信息（等待 API_KEY 加载完成）
       await loadConfigInfo(user);
-      
+
+      // 加载主题偏好（在 loadPages 之前，确保主题先就位）
+      await loadThemePreference();
+
       // 加载页面列表
       loadPages();
     }
@@ -504,6 +707,14 @@
       setTimeout(() => toast.className = 'toast', 3000);
     }
     
+    async function refreshPages() {
+      await loadPages();
+      // loadPages 会重置渲染，若搜索框有关键词则重新过滤
+      const keyword = (document.getElementById('search-input')?.value || '').trim();
+      if (keyword) filterPages();
+      showToast('🔄 列表已刷新');
+    }
+
     async function loadPages() {
       try {
         const res = await fetch('/api/list', {
@@ -513,12 +724,15 @@
         });
         const data = await res.json();
         const container = document.getElementById('pages-container');
+        const countEl = document.getElementById('page-count');
         if (!data.success || data.pages.length === 0) {
           allPagesData = [];
+          if (countEl) countEl.textContent = '0';
           container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><h2>还没有页面</h2><p>上传 HTML 文件后这里会显示列表</p></div>';
           return;
         }
         allPagesData = data.pages;
+        if (countEl) countEl.textContent = String(data.pages.length);
         renderPages(data.pages);
       } catch (err) {
         document.getElementById('pages-container').innerHTML = '<div class="empty-state"><div class="icon">❌</div><h2>加载失败</h2><p>' + err.message + '</p></div>';
@@ -597,16 +811,24 @@
         displayName = displayName.replace(/-/g, ' ').replace(/_/g, ' ');
 
         const isFav = page.is_favorite;
-        const starSvg = isFav
-          ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'
-          : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+        const starCls = isFav ? 'star-active' : 'star-idle';
+        const starSvg = '<svg class="' + starCls + '" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
 
         const card = document.createElement('div');
         card.className = 'page-card';
         const tenantId = currentUser?.tenant_id || currentUser?.open_id || 'default';
         const shareUrl = window.location.origin + '/' + tenantId + '/pages/' + encodeURIComponent(filename);
         const createdDate = page.createdAt ? new Date(page.createdAt).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
-        card.innerHTML = '<button class="favorite-btn" onclick="toggleFavorite(\'' + filename + '\', this)" title="收藏">' + starSvg + '</button><h3 data-display-name="' + displayName + '">' + displayName + ' <span class="rename-icon" onclick="renamePage(\'' + filename + '\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span></h3><p style="font-size: 11px; color: #64748b; margin-top: 2px; margin-bottom: 0;">📄 ' + filename + '</p>' + (createdDate ? '<p style="font-size: 11px; color: #9ca3af; margin-top: 1px; margin-bottom: 12px;">🕐 ' + createdDate + '</p>' : '<p style="margin-bottom: 12px;"></p>') + '<div class="actions"><a href="/' + tenantId + '/pages/' + encodeURIComponent(filename) + '" target="_blank">🚀 打开页面</a><button class="share-btn" onclick="sharePage(\'' + filename + '\', \'' + shareUrl + '\')" title="分享"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button><button class="download-btn" onclick="downloadPage(\'' + filename + '\')" title="下载"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><button class="replace-btn" onclick="replacePage(\'' + filename + '\')" title="更新文件"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button><button class="delete-btn" onclick="deletePage(\'' + filename + '\')" title="删除"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button></div>';
+        card.innerHTML = '<button class="favorite-btn" onclick="toggleFavorite(\'' + filename + '\', this)" title="收藏">' + starSvg + '</button>'
+          + '<div class="card-index">' + (page.filename ? ('DOC · ' + page.filename.split('.')[0].substring(0, 14).toUpperCase()) : '') + '</div>'
+          + '<h3 data-display-name="' + displayName + '">' + displayName + ' <span class="rename-icon" onclick="renamePage(\'' + filename + '\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span></h3>'
+          + '<p style="font-size: 11px; margin-top: 2px; margin-bottom: 0;">📄 ' + filename + '</p>'
+          + (createdDate ? '<p style="font-size: 11px; margin-top: 1px; margin-bottom: 12px;">🕐 ' + createdDate + '</p>' : '<p style="margin-bottom: 12px;"></p>')
+          + '<div class="actions"><a class="open-btn" href="/' + tenantId + '/pages/' + encodeURIComponent(filename) + '" target="_blank">🚀 打开页面</a>'
+          + '<button class="icon-btn share" onclick="sharePage(\'' + filename + '\', \'' + shareUrl + '\')" title="分享"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>'
+          + '<button class="icon-btn download" onclick="downloadPage(\'' + filename + '\')" title="下载"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>'
+          + '<button class="icon-btn replace" onclick="replacePage(\'' + filename + '\')" title="更新文件"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>'
+          + '<button class="icon-btn delete" onclick="deletePage(\'' + filename + '\')" title="删除"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div>';
         container.appendChild(card);
       });
     }

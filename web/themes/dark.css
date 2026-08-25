@@ -1,0 +1,110 @@
+/* ============ Dark · 深色高级感 ============ */
+:root {
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+
+  --bg-body: #0f172a;
+  --bg-header: #1e293b;
+  --bg-card: #1e293b;
+  --bg-card-hover: #1e293b;
+  --bg-input: #0f172a;
+
+  --fg-text: #cbd5e1;
+  --fg-text-strong: #f1f5f9;
+  --fg-text-muted: #94a3b8;
+  --fg-text-faint: #475569;
+
+  --border-card: #334155;
+  --border-card-hover: #475569;
+  --border-input: #334155;
+
+  --accent: #818cf8;
+  --accent-hover: #a5b4fc;
+  --accent-soft: rgba(129, 140, 248, 0.15);
+
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 12px 32px rgba(0, 0, 0, 0.4);
+  --shadow-header: 0 4px 24px rgba(0, 0, 0, 0.3);
+
+  --radius-header: 14px;
+  --radius-card: 14px;
+  --btn-radius: 9px;
+
+  --badge-bg: rgba(129, 140, 248, 0.15);
+  --badge-border: rgba(129, 140, 248, 0.3);
+  --badge-fg: #a5b4fc;
+
+  --refresh-bg: transparent;
+  --refresh-border: transparent;
+  --refresh-fg: #818cf8;
+  --refresh-bg-hover: rgba(129, 140, 248, 0.15);
+  --refresh-border-hover: transparent;
+  --refresh-fg-hover: #a5b4fc;
+
+  --user-info-bg: rgba(255, 255, 255, 0.05);
+
+  --btn-nav-bg: transparent;
+  --btn-nav-fg: #cbd5e1;
+  --btn-nav-bg-hover: rgba(255, 255, 255, 0.05);
+  --btn-nav-border: 1px solid #475569;
+  --btn-primary-bg: linear-gradient(135deg, #818cf8, #6366f1);
+  --btn-primary-bg-hover: linear-gradient(135deg, #a5b4fc, #818cf8);
+  --btn-primary-fg: #ffffff;
+  --btn-danger-bg: transparent;
+  --btn-danger-bg-hover: rgba(255, 255, 255, 0.05);
+  --btn-danger-fg: #cbd5e1;
+  --btn-danger-border: 1px solid #475569;
+
+  --search-bg: #0f172a;
+  --search-border: #334155;
+  --search-icon-color: #64748b;
+  --search-placeholder: #64748b;
+  --btn-search-bg: #334155;
+  --btn-search-fg: #e2e8f0;
+
+  --btn-open-bg: linear-gradient(135deg, #818cf8, #6366f1);
+  --btn-open-bg-hover: linear-gradient(135deg, #a5b4fc, #818cf8);
+  --btn-open-fg: #ffffff;
+  --btn-open-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+  --btn-open-shadow-hover: 0 4px 14px rgba(99, 102, 241, 0.5);
+
+  --btn-icon-bg: rgba(255, 255, 255, 0.03);
+  --btn-icon-fg: #94a3b8;
+  --btn-icon-border: #475569;
+  --btn-icon-radius: 8px;
+  --icon-idle: #94a3b8;
+
+  --btn-share-bg-hover: rgba(129, 140, 248, 0.15);
+  --btn-share-border-hover: #818cf8;
+  --btn-share-fg-hover: #a5b4fc;
+  --btn-share-shadow-hover: none;
+
+  --btn-download-bg-hover: rgba(59, 130, 246, 0.15);
+  --btn-download-border-hover: #3b82f6;
+  --btn-download-fg-hover: #93c5fd;
+  --btn-download-shadow-hover: none;
+
+  --btn-replace-bg-hover: rgba(217, 119, 6, 0.15);
+  --btn-replace-border-hover: #d97706;
+  --btn-replace-fg-hover: #fbbf24;
+  --btn-replace-shadow-hover: none;
+
+  --btn-delete-bg-hover: rgba(239, 68, 68, 0.15);
+  --btn-delete-border-hover: #ef4444;
+  --btn-delete-fg-hover: #fca5a5;
+  --btn-delete-shadow-hover: none;
+
+  --star-active: #f59e0b;
+  --star-idle: #475569;
+
+  --card-index-display: none;
+
+  /* 卡片顶部渐变光带 */
+  --card-top-accent: '';
+  --card-top-accent-height: 2px;
+  --card-top-accent-bg: linear-gradient(90deg, #818cf8, #c084fc);
+  --card-top-accent-scale: 1;
+  --card-top-accent-opacity: 0;
+}
+
+body { background: var(--bg-body); }
+.page-card:hover::before { opacity: 1; transform: scaleX(1); }

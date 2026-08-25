@@ -1,0 +1,120 @@
+/* ============ Classic · 紫蓝渐变（现状原版） ============ */
+:root {
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+
+  --bg-body: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --bg-header: #ffffff;
+  --bg-card: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  --bg-card-hover: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  --bg-input: #ffffff;
+
+  --fg-text: #1f2937;
+  --fg-text-strong: #1f2937;
+  --fg-text-muted: #6b7280;
+  --fg-text-faint: #9ca3af;
+
+  --border-card: rgba(102, 126, 234, 0.1);
+  --border-card-hover: rgba(102, 126, 234, 0.2);
+  --border-input: #e2e8f0;
+
+  --accent: #667eea;
+  --accent-hover: #5568d3;
+  --accent-soft: rgba(102, 126, 234, 0.1);
+
+  --shadow-card: 0 4px 20px rgba(102, 126, 234, 0.15);
+  --shadow-card-hover: 0 12px 40px rgba(102, 126, 234, 0.25);
+  --shadow-header: 0 10px 40px rgba(0, 0, 0, 0.2);
+
+  --radius-header: 16px;
+  --radius-card: 16px;
+  --btn-radius: 8px;
+
+  --badge-bg: #eef2ff;
+  --badge-border: #e0e7ff;
+  --badge-fg: #667eea;
+
+  --refresh-bg: #f3f4f6;
+  --refresh-border: #e5e7eb;
+  --refresh-fg: #667eea;
+  --refresh-bg-hover: #e0e7ff;
+  --refresh-border-hover: #c7d2fe;
+  --refresh-fg-hover: #5568d3;
+
+  --user-info-bg: #f3f4f6;
+
+  --btn-nav-bg: #667eea;
+  --btn-nav-fg: #ffffff;
+  --btn-nav-bg-hover: #5568d3;
+  --btn-primary-bg: #10b981;
+  --btn-primary-bg-hover: #059669;
+  --btn-primary-fg: #ffffff;
+  --btn-danger-bg: #667eea;
+  --btn-danger-bg-hover: #5568d3;
+  --btn-danger-fg: #ffffff;
+
+  --search-bg: #ffffff;
+  --search-border: #e2e8f0;
+  --search-icon-color: #9ca3af;
+  --search-placeholder: #9ca3af;
+  --btn-search-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --btn-search-fg: #ffffff;
+
+  --btn-open-bg: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --btn-open-bg-hover: linear-gradient(135deg, #059669 0%, #047857 100%);
+  --btn-open-fg: #ffffff;
+  --btn-open-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  --btn-open-shadow-hover: 0 4px 12px rgba(16, 185, 129, 0.4);
+
+  --btn-icon-bg: #ffffff;
+  --btn-icon-fg: #64748b;
+  --btn-icon-border: #e5e7eb;
+  --btn-icon-radius: 8px;
+  --icon-idle: #64748b;
+
+  --btn-share-bg: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  --btn-share-fg: #4a78d9;
+  --btn-share-border: rgba(74, 120, 217, 0.2);
+  --btn-share-bg-hover: linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 100%);
+  --btn-share-border-hover: rgba(74, 120, 217, 0.4);
+  --btn-share-fg-hover: #4a78d9;
+  --btn-share-shadow-hover: 0 4px 12px rgba(74, 120, 217, 0.25);
+
+  --btn-download-bg: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  --btn-download-fg: #3b82f6;
+  --btn-download-border: rgba(59, 130, 246, 0.2);
+  --btn-download-bg-hover: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%);
+  --btn-download-border-hover: rgba(59, 130, 246, 0.4);
+  --btn-download-fg-hover: #3b82f6;
+  --btn-download-shadow-hover: 0 4px 12px rgba(59, 130, 246, 0.25);
+
+  --btn-replace-bg: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  --btn-replace-fg: #d97706;
+  --btn-replace-border: rgba(217, 119, 6, 0.2);
+  --btn-replace-bg-hover: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
+  --btn-replace-border-hover: rgba(217, 119, 6, 0.4);
+  --btn-replace-fg-hover: #d97706;
+  --btn-replace-shadow-hover: 0 4px 12px rgba(217, 119, 6, 0.25);
+
+  --btn-delete-bg: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  --btn-delete-fg: #ef4444;
+  --btn-delete-border: rgba(239, 68, 68, 0.2);
+  --btn-delete-bg-hover: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+  --btn-delete-border-hover: rgba(239, 68, 68, 0.4);
+  --btn-delete-fg-hover: #ef4444;
+  --btn-delete-shadow-hover: 0 4px 12px rgba(239, 68, 68, 0.25);
+
+  --star-active: #f59e0b;
+  --star-idle: #d1d5db;
+
+  --card-index-display: none;
+
+  /* 卡片顶部装饰条 */
+  --card-top-accent: '';
+  --card-top-accent-height: 4px;
+  --card-top-accent-bg: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  --card-top-accent-scale: 0;
+}
+
+body {
+  background: var(--bg-body);
+}

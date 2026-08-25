@@ -1,0 +1,106 @@
+/* ============ Light · 浅色清爽风 ============ */
+:root {
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+
+  --bg-body: #f6f7fb;
+  --bg-header: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #ffffff;
+  --bg-input: #ffffff;
+
+  --fg-text: #1f2937;
+  --fg-text-strong: #0f172a;
+  --fg-text-muted: #94a3b8;
+  --fg-text-faint: #cbd5e1;
+
+  --border-card: #e8eaf1;
+  --border-card-hover: #c7d2fe;
+  --border-input: #e2e8f0;
+
+  --accent: #667eea;
+  --accent-hover: #5568d3;
+  --accent-soft: rgba(102, 126, 234, 0.08);
+
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-card-hover: 0 8px 24px rgba(102, 126, 234, 0.10);
+  --shadow-header: 0 1px 2px rgba(15, 23, 42, 0.04);
+
+  --radius-header: 14px;
+  --radius-card: 14px;
+  --btn-radius: 9px;
+
+  --badge-bg: #eef2ff;
+  --badge-border: #e0e7ff;
+  --badge-fg: #667eea;
+
+  --refresh-bg: transparent;
+  --refresh-border: transparent;
+  --refresh-fg: #667eea;
+  --refresh-bg-hover: #eef2ff;
+  --refresh-border-hover: transparent;
+  --refresh-fg-hover: #5568d3;
+
+  --user-info-bg: #f3f4f6;
+
+  --btn-nav-bg: #ffffff;
+  --btn-nav-fg: #475569;
+  --btn-nav-bg-hover: #f8fafc;
+  --btn-nav-border: 1px solid #e5e7eb;
+  --btn-primary-bg: #667eea;
+  --btn-primary-bg-hover: #5568d3;
+  --btn-primary-fg: #ffffff;
+  --btn-danger-bg: #ffffff;
+  --btn-danger-bg-hover: #f8fafc;
+  --btn-danger-fg: #475569;
+  --btn-danger-border: 1px solid #e5e7eb;
+
+  --search-bg: #ffffff;
+  --search-border: #e2e8f0;
+  --search-icon-color: #94a3b8;
+  --search-placeholder: #94a3b8;
+  --btn-search-bg: #0f172a;
+  --btn-search-fg: #ffffff;
+
+  --btn-open-bg: #667eea;
+  --btn-open-bg-hover: #5568d3;
+  --btn-open-fg: #ffffff;
+  --btn-open-shadow: none;
+  --btn-open-shadow-hover: 0 2px 8px rgba(102, 126, 234, 0.25);
+
+  --btn-icon-bg: #ffffff;
+  --btn-icon-fg: #64748b;
+  --btn-icon-border: #e5e7eb;
+  --btn-icon-radius: 8px;
+  --icon-idle: #64748b;
+
+  --btn-share-bg-hover: #eef2ff;
+  --btn-share-border-hover: #c7d2fe;
+  --btn-share-fg-hover: #667eea;
+  --btn-share-shadow-hover: none;
+
+  --btn-download-bg-hover: #eff6ff;
+  --btn-download-border-hover: #bfdbfe;
+  --btn-download-fg-hover: #3b82f6;
+  --btn-download-shadow-hover: none;
+
+  --btn-replace-bg-hover: #fffbeb;
+  --btn-replace-border-hover: #fde68a;
+  --btn-replace-fg-hover: #d97706;
+  --btn-replace-shadow-hover: none;
+
+  --btn-delete-bg-hover: #fef2f2;
+  --btn-delete-border-hover: #fecaca;
+  --btn-delete-fg-hover: #ef4444;
+  --btn-delete-shadow-hover: none;
+
+  --star-active: #f59e0b;
+  --star-idle: #d1d5db;
+
+  --card-index-display: none;
+  --card-top-accent: '';
+  --card-top-accent-height: 0;
+  --card-top-accent-bg: transparent;
+  --card-top-accent-scale: 0;
+}
+
+body { background: var(--bg-body); }

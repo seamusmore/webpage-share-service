@@ -1,0 +1,177 @@
+/* ============ Endfield · 终末地米白档案 ============ */
+:root {
+  --font-family: 'Noto Sans SC', 'PingFang SC', 'Inter', -apple-system, sans-serif;
+
+  --bg-body: #edece6;
+  --bg-header: #f5f4ee;
+  --bg-card: #f5f4ee;
+  --bg-card-hover: #faf9f3;
+  --bg-input: transparent;
+
+  --fg-text: #4a4c44;
+  --fg-text-strong: #1a1c18;
+  --fg-text-muted: #8a8880;
+  --fg-text-faint: #b0aea4;
+
+  --border-card: #d8d6cc;
+  --border-card-hover: #7a8a6a;
+  --border-input: #c8c6bc;
+
+  --accent: #7a8a6a;
+  --accent-hover: #6a7a5a;
+  --accent-soft: rgba(122, 138, 106, 0.1);
+
+  --shadow-card: 0 1px 0 rgba(0, 0, 0, 0.02), 0 4px 12px rgba(0, 0, 0, 0.03);
+  --shadow-card-hover: 0 6px 20px rgba(122, 138, 106, 0.12);
+  --shadow-header: 0 1px 0 rgba(0, 0, 0, 0.02), 0 4px 12px rgba(0, 0, 0, 0.03);
+
+  --radius-header: 0;
+  --radius-card: 0;
+  --btn-radius: 0;
+
+  --h1-letter-spacing: 2px;
+  --h1-size: 26px;
+  --h1-weight: 500;
+  --h3-letter-spacing: 1px;
+  --h3-font: 'Noto Sans SC', 'PingFang SC', sans-serif;
+
+  --badge-bg: transparent;
+  --badge-border: #7a8a6a;
+  --badge-fg: #7a8a6a;
+  --badge-radius: 0;
+  --badge-font: 'Consolas', monospace;
+  --badge-letter-spacing: 1px;
+
+  --refresh-bg: transparent;
+  --refresh-border: #c8c6bc;
+  --refresh-fg: #6a6a5f;
+  --refresh-bg-hover: rgba(122, 138, 106, 0.06);
+  --refresh-border-hover: #7a8a6a;
+  --refresh-fg-hover: #7a8a6a;
+  --refresh-radius: 0;
+
+  --user-info-bg: transparent;
+
+  --btn-nav-bg: transparent;
+  --btn-nav-fg: #4a4c44;
+  --btn-nav-bg-hover: rgba(122, 138, 106, 0.05);
+  --btn-nav-border: 1px solid #b8b6ac;
+  --btn-primary-bg: #7a8a6a;
+  --btn-primary-bg-hover: #6a7a5a;
+  --btn-primary-fg: #f5f4ee;
+  --btn-danger-bg: transparent;
+  --btn-danger-bg-hover: rgba(122, 138, 106, 0.05);
+  --btn-danger-fg: #4a4c44;
+  --btn-danger-border: 1px solid #b8b6ac;
+
+  --btn-letter-spacing: 2px;
+  --btn-text-transform: uppercase;
+  --btn-weight: 500;
+
+  --search-bg: transparent;
+  --search-border: transparent;
+  --search-icon-color: #8a8880;
+  --search-placeholder: #a8a69c;
+  --search-radius: 0;
+  --search-font: 'Consolas', monospace;
+  --search-padding-top: 18px;
+  --search-border-top: 1px solid #d8d6cc;
+  --btn-search-bg: transparent;
+  --btn-search-fg: #4a4c44;
+  --btn-search-border: 1px solid #b8b6ac;
+
+  --btn-open-bg: transparent;
+  --btn-open-bg-hover: #7a8a6a;
+  --btn-open-fg: #4a4c44;
+  --btn-open-shadow: none;
+  --btn-open-shadow-hover: none;
+  --btn-open-border: 1px solid #b8b6ac;
+
+  --btn-icon-bg: transparent;
+  --btn-icon-fg: #a8a69c;
+  --btn-icon-border: #d8d6cc;
+  --btn-icon-radius: 0;
+  --icon-idle: #6a6a5f;
+
+  --btn-share-bg-hover: rgba(106, 138, 154, 0.06);
+  --btn-share-border-hover: #6a8a9a;
+  --btn-share-fg-hover: #6a8a9a;
+  --btn-share-shadow-hover: none;
+
+  --btn-download-bg-hover: rgba(90, 122, 154, 0.06);
+  --btn-download-border-hover: #5a7a9a;
+  --btn-download-fg-hover: #5a7a9a;
+  --btn-download-shadow-hover: none;
+
+  --btn-replace-bg-hover: rgba(184, 154, 106, 0.06);
+  --btn-replace-border-hover: #b89a6a;
+  --btn-replace-fg-hover: #b89a6a;
+  --btn-replace-shadow-hover: none;
+
+  --btn-delete-bg-hover: rgba(168, 104, 104, 0.06);
+  --btn-delete-border-hover: #a86868;
+  --btn-delete-fg-hover: #a86868;
+  --btn-delete-shadow-hover: none;
+
+  --star-active: #c89a3a;
+  --star-idle: #c8c6bc;
+
+  --card-index-display: block;
+  --card-index-color: #a8a69c;
+  --card-index-font: 'Consolas', monospace;
+
+  --card-top-accent: '';
+  --card-top-accent-height: 0;
+  --card-top-accent-bg: transparent;
+  --card-top-accent-scale: 0;
+
+  --grid-gap: 14px;
+  --card-padding: 20px 22px;
+}
+
+body {
+  background: #edece6;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(166, 177, 145, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(140, 160, 140, 0.06) 0%, transparent 50%);
+}
+
+/* 卡片右上细折角 */
+.page-card::after {
+  content: '';
+  position: absolute; top: 8px; right: 8px;
+  width: 20px; height: 20px;
+  border-top: 1px solid #b8b6ac;
+  border-right: 1px solid #b8b6ac;
+  opacity: 0.5;
+  transition: all 0.25s;
+  pointer-events: none;
+}
+.page-card:hover::after {
+  border-color: #7a8a6a;
+  opacity: 1;
+  width: 24px;
+  height: 24px;
+}
+
+/* header 左侧色条 */
+.header {
+  border-left: 3px solid #7a8a6a;
+}
+
+/* 编号前加箭头 */
+.card-index::before {
+  content: '▸';
+  color: #7a8a6a;
+  margin-right: 4px;
+}
+
+/* 搜索框下划线 */
+.search-input {
+  border: none !important;
+  border-bottom: 1px solid #c8c6bc !important;
+  border-radius: 0 !important;
+}
+.search-input:focus {
+  border-bottom-color: #7a8a6a !important;
+}

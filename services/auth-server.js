@@ -77,6 +77,15 @@ try {
         console.log('✅ tenants 表已迁移：添加 name 列');
       }
     });
+
+    // 迁移：为 tenants 表添加 theme 列（主题偏好，默认 classic）
+    db.run('ALTER TABLE tenants ADD COLUMN theme TEXT DEFAULT "classic"', function(err) {
+      if (err && !err.message.includes('duplicate column')) {
+        console.error('⚠️  迁移 tenants.theme 失败:', err.message);
+      } else if (!err) {
+        console.log('✅ tenants 表已迁移：添加 theme 列');
+      }
+    });
     
     // 查询并打印租户总数
     db.get('SELECT COUNT(*) as count FROM tenants', function(err, row) {
@@ -785,6 +794,76 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // 6.5 API - 主题偏好（GET 读取 / POST 保存）
+    const ALLOWED_THEMES = ['classic', 'light', 'dark', 'arknights', 'endfield', 'genshin'];
+
+    if (url.pathname === '/api/theme' && req.method === 'GET') {
+      const apiKey = req.headers['x-api-key'];
+      if (!apiKey) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '缺少 API_KEY' }));
+        return;
+      }
+      const tenant = await getTenantByApiKey(apiKey);
+      if (!tenant) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '无效的 API_KEY' }));
+        return;
+      }
+      db.get('SELECT theme FROM tenants WHERE tenant_id = ?', [tenant.id], (err, row) => {
+        if (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message }));
+          return;
+        }
+        const theme = row && row.theme ? row.theme : 'classic';
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, theme }));
+      });
+      return;
+    }
+
+    if (url.pathname === '/api/theme' && req.method === 'POST') {
+      const apiKey = req.headers['x-api-key'];
+      if (!apiKey) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '缺少 API_KEY' }));
+        return;
+      }
+      const tenant = await getTenantByApiKey(apiKey);
+      if (!tenant) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '无效的 API_KEY' }));
+        return;
+      }
+      const chunks = [];
+      req.on('data', chunk => chunks.push(chunk));
+      req.on('end', () => {
+        try {
+          const body = JSON.parse(Buffer.concat(chunks).toString());
+          const theme = body.theme;
+          if (!theme || !ALLOWED_THEMES.includes(theme)) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: '无效的主题，允许: ' + ALLOWED_THEMES.join(', ') }));
+            return;
+          }
+          db.run('UPDATE tenants SET theme = ?, updated_at = CURRENT_TIMESTAMP WHERE tenant_id = ?', [theme, tenant.id], function(err) {
+            if (err) {
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: err.message }));
+              return;
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, theme }));
+          });
+        } catch (err) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: '请求解析失败' }));
+        }
+      });
+      return;
+    }
+
     // 7. API - 文件列表（需要 API_KEY）
     if (url.pathname === '/api/list' && req.method === 'GET') {
       const apiKey = req.headers['x-api-key'];
@@ -1112,6 +1191,22 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     
+    // 9.5 主题样式文件（无需登录，仅允许 .css）
+    if (url.pathname.match(/^\/themes\/[a-zA-Z0-9_-]+\.css$/)) {
+      const cssPath = path.join(__dirname, '..', 'web', url.pathname);
+      // 防穿越
+      const real = path.resolve(cssPath);
+      const allowRoot = path.resolve(path.join(__dirname, '..', 'web', 'themes'));
+      if (!real.startsWith(allowRoot) || !fs.existsSync(real)) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Theme not found' }));
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=300' });
+      res.end(fs.readFileSync(real));
+      return;
+    }
+
     // 10. 租户页面文件（JWT 验证）
     if (url.pathname.match(/^\/([a-zA-Z0-9_-]+)\/pages\//)) {
       const match = url.pathname.match(/^\/([a-zA-Z0-9_-]+)\/pages\/(.+)$/);

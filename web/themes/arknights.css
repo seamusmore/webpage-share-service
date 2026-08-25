@@ -1,0 +1,173 @@
+/* ============ Arknights · 黑橙工业 ============ */
+:root {
+  --font-family: 'Bahnschrift', 'Rajdhani', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+
+  --bg-body: #0a0a0a;
+  --bg-header: linear-gradient(180deg, #1a1a1a 0%, #141414 100%);
+  --bg-card: linear-gradient(180deg, #161616 0%, #121212 100%);
+  --bg-card-hover: linear-gradient(180deg, #1a1a1a 0%, #141414 100%);
+  --bg-input: #0a0a0a;
+
+  --fg-text: #b0b0b0;
+  --fg-text-strong: #ffffff;
+  --fg-text-muted: #666666;
+  --fg-text-faint: #444444;
+
+  --border-card: #262626;
+  --border-card-hover: #ff6b35;
+  --border-input: #2a2a2a;
+
+  --accent: #ff6b35;
+  --accent-hover: #ff8a5c;
+  --accent-soft: rgba(255, 107, 53, 0.12);
+
+  --shadow-card: none;
+  --shadow-card-hover: 0 8px 24px rgba(255, 107, 53, 0.15), 0 0 0 1px rgba(255, 107, 53, 0.3);
+  --shadow-header: none;
+
+  --radius-header: 0;
+  --radius-card: 0;
+  --btn-radius: 0;
+
+  --h1-letter-spacing: 1px;
+  --h1-size: 24px;
+  --h1-weight: 700;
+  --h3-letter-spacing: 0.5px;
+  --h3-font: 'Bahnschrift', 'Rajdhani', 'PingFang SC', sans-serif;
+
+  --badge-bg: #ff6b35;
+  --badge-border: #ff6b35;
+  --badge-fg: #0a0a0a;
+  --badge-radius: 0;
+  --badge-font: 'Consolas', monospace;
+  --badge-letter-spacing: 0;
+
+  --refresh-bg: #1a1a1a;
+  --refresh-border: #3a3a3a;
+  --refresh-fg: #999999;
+  --refresh-bg-hover: rgba(255, 107, 53, 0.1);
+  --refresh-border-hover: #ff6b35;
+  --refresh-fg-hover: #ff6b35;
+  --refresh-radius: 0;
+
+  --user-info-bg: #1a1a1a;
+
+  --btn-nav-bg: transparent;
+  --btn-nav-fg: #b0b0b0;
+  --btn-nav-bg-hover: rgba(255, 107, 53, 0.1);
+  --btn-nav-border: 1px solid #3a3a3a;
+  --btn-primary-bg: #ff6b35;
+  --btn-primary-bg-hover: #ff8a5c;
+  --btn-primary-fg: #0a0a0a;
+  --btn-danger-bg: transparent;
+  --btn-danger-bg-hover: rgba(255, 107, 53, 0.1);
+  --btn-danger-fg: #b0b0b0;
+  --btn-danger-border: 1px solid #3a3a3a;
+
+  --btn-letter-spacing: 1px;
+  --btn-text-transform: uppercase;
+  --btn-weight: 600;
+
+  --search-bg: #0a0a0a;
+  --search-border: #2a2a2a;
+  --search-icon-color: #555;
+  --search-placeholder: #555;
+  --search-radius: 0;
+  --search-font: 'Consolas', monospace;
+  --btn-search-bg: #1a1a1a;
+  --btn-search-fg: #999;
+  --btn-search-border: 1px solid #3a3a3a;
+
+  --btn-open-bg: #ff6b35;
+  --btn-open-bg-hover: #ff8a5c;
+  --btn-open-fg: #0a0a0a;
+  --btn-open-shadow: 0 0 12px rgba(255, 107, 53, 0.3);
+  --btn-open-shadow-hover: 0 0 20px rgba(255, 107, 53, 0.55);
+  --btn-open-border: none;
+
+  --btn-icon-bg: #1a1a1a;
+  --btn-icon-fg: #888;
+  --btn-icon-border: #2a2a2a;
+  --btn-icon-radius: 0;
+  --icon-idle: #999;
+
+  --btn-share-bg-hover: rgba(129, 140, 248, 0.1);
+  --btn-share-border-hover: #818cf8;
+  --btn-share-fg-hover: #a5b4fc;
+  --btn-share-shadow-hover: none;
+
+  --btn-download-bg-hover: rgba(59, 130, 246, 0.1);
+  --btn-download-border-hover: #3b82f6;
+  --btn-download-fg-hover: #93c5fd;
+  --btn-download-shadow-hover: none;
+
+  --btn-replace-bg-hover: rgba(245, 158, 11, 0.1);
+  --btn-replace-border-hover: #f59e0b;
+  --btn-replace-fg-hover: #fbbf24;
+  --btn-replace-shadow-hover: none;
+
+  --btn-delete-bg-hover: rgba(239, 68, 68, 0.1);
+  --btn-delete-border-hover: #ef4444;
+  --btn-delete-fg-hover: #fca5a5;
+  --btn-delete-shadow-hover: none;
+
+  --star-active: #ff6b35;
+  --star-idle: #444;
+
+  --card-index-display: block;
+  --card-index-color: #555;
+  --card-index-font: 'Consolas', monospace;
+
+  --card-top-accent: '';
+  --card-top-accent-height: 0;
+  --card-top-accent-bg: transparent;
+  --card-top-accent-scale: 0;
+
+  --grid-gap: 16px;
+  --card-padding: 18px 20px;
+}
+
+body {
+  background: #0a0a0a;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* 工业斜切角 */
+.header,
+.page-card,
+.empty-state,
+.theme-modal-inner,
+.badge,
+.refresh-btn,
+.nav a, .nav label, .nav button,
+.search-btn,
+.open-btn,
+.icon-btn,
+.upload-btn {
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+}
+.refresh-btn { clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); }
+.badge { clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%); }
+.icon-btn { clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
+.search-input { clip-path: none; }
+
+/* 卡片右上斜切阴影 */
+.page-card::after {
+  content: '';
+  position: absolute; top: 0; right: 0;
+  width: 32px; height: 32px;
+  background: linear-gradient(225deg, transparent 50%, #262626 50%);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* 强调色左边条 */
+.header::before {
+  content: '';
+  position: absolute; top: 0; left: 0; bottom: 0;
+  width: 4px;
+  background: #ff6b35;
+}
