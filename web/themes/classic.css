@@ -132,7 +132,7 @@
   --card-index-display: none;
 }
 
-body { background: var(--bg-body); }
+body { background: var(--bg-body); background-attachment: fixed; }
 
 /* 文件图标颜色 */
 .header h1 > svg { color: #667eea; }
