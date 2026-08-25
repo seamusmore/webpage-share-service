@@ -461,7 +461,7 @@
       light:     { tag: '', ph: '输入名称搜索...',       search: '搜索',     open: '🚀 打开页面', fileP: '📄 ', timeP: '🕐 ', timeFmt: 'default' },
       dark:      { tag: '', ph: '输入名称搜索...',       search: '搜索',     open: '🚀 打开页面', fileP: '📄 ', timeP: '🕐 ', timeFmt: 'default' },
       arknights: { tag: '// ARCHIVE_TERMINAL', ph: '> query: name_keyword', search: 'EXEC', open: 'OPEN', fileP: '> ', timeP: '> ', timeFmt: 'zh-hyphen' },
-      endfield:  { tag: 'TALOS-II DATA ARCHIVE', ph: 'search_by_name', search: 'SEARCH', open: 'OPEN', fileP: 'fname: ', timeP: 'mtime: ', timeFmt: 'zh-hyphen' },
+      endfield:  { tag: 'TALOS-II DATA ARCHIVE', ph: 'search_by_name', search: 'SEARCH', open: 'OPEN', fileP: 'fname: ', timeP: 'mtime: ', timeFmt: 'zh-hyphen', countPad: 3 },
       genshin:   { tag: '✦ Teyvat Archive ✦', ph: '请输入页面前缀……', search: '搜索', open: '打开页面', fileP: '', timeP: '', timeFmt: 'zh-dot' }
     };
 
@@ -470,7 +470,7 @@
     }
 
     function formatCount(n) {
-      return currentTheme === 'endfield' ? String(n).padStart(3, '0') : String(n);
+      return String(n).padStart(themeText('countPad') || 0, '0');
     }
 
     function formatDate(d, fmt) {
@@ -517,6 +517,9 @@
       if (tt) tt.textContent = themeText('tag');
       // 更新头像/用户名
       renderUserInfo();
+      // 数字徽章按当前主题重新格式化（补0位数各主题不同）
+      const pc = document.getElementById('page-count');
+      if (pc) pc.textContent = formatCount(allPagesData ? allPagesData.length : 0);
       // 高亮选中项
       document.querySelectorAll('.theme-option').forEach(el => {
         el.classList.toggle('active', el.dataset.theme === themeId);
