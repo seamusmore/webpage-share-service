@@ -234,6 +234,9 @@ body {
 /* 收藏星位置（给 corner 让位） */
 .favorite-btn { top: 14px; right: 40px; }
 
+/* 五星大小 */
+.favorite-btn svg { width: 16px; height: 16px; }
+
 /* 搜索按钮单侧斜切 */
 .search-btn {
   clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 0 100%);
