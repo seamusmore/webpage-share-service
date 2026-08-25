@@ -214,6 +214,8 @@
       background: var(--btn-open-bg-hover);
       box-shadow: var(--btn-open-shadow-hover);
       transform: translateY(-1px);
+      color: var(--btn-open-fg-hover, var(--btn-open-fg));
+      border-color: var(--btn-open-border-hover, var(--btn-open-border, transparent));
     }
     .actions .share-btn,
     .actions .download-btn,
@@ -465,6 +467,10 @@
 
     function themeText(key) {
       return (THEME_TEXT[currentTheme] || THEME_TEXT.classic)[key] ?? '';
+    }
+
+    function formatCount(n) {
+      return currentTheme === 'endfield' ? String(n).padStart(3, '0') : String(n);
     }
 
     function formatDate(d, fmt) {
@@ -808,12 +814,12 @@
         const countEl = document.getElementById('page-count');
         if (!data.success || data.pages.length === 0) {
           allPagesData = [];
-          if (countEl) countEl.textContent = '0';
+          if (countEl) countEl.textContent = formatCount(0);
           container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><h2>还没有页面</h2><p>上传 HTML 文件后这里会显示列表</p></div>';
           return;
         }
         allPagesData = data.pages;
-        if (countEl) countEl.textContent = String(data.pages.length);
+        if (countEl) countEl.textContent = formatCount(data.pages.length);
         renderPages(data.pages);
       } catch (err) {
         document.getElementById('pages-container').innerHTML = '<div class="empty-state"><div class="icon">❌</div><h2>加载失败</h2><p>' + err.message + '</p></div>';

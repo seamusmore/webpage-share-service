@@ -55,7 +55,9 @@
   --btn-nav-bg: transparent;
   --btn-nav-fg: #4a4c44;
   --btn-nav-bg-hover: rgba(122, 138, 106, 0.05);
+  --btn-nav-fg-hover: #7a8a6a;
   --btn-nav-border: 1px solid #b8b6ac;
+  --btn-nav-border-hover: #7a8a6a;
   --btn-primary-bg: #7a8a6a;
   --btn-primary-bg-hover: #6a7a5a;
   --btn-primary-fg: #f5f4ee;
@@ -83,9 +85,11 @@
   --btn-open-bg: transparent;
   --btn-open-bg-hover: #7a8a6a;
   --btn-open-fg: #4a4c44;
+  --btn-open-fg-hover: #f5f4ee;
   --btn-open-shadow: none;
   --btn-open-shadow-hover: none;
   --btn-open-border: 1px solid #b8b6ac;
+  --btn-open-border-hover: #7a8a6a;
 
   --btn-icon-bg: transparent;
   --btn-icon-fg: #a8a69c;
@@ -260,4 +264,35 @@ body { padding: 32px 20px; }
 /* 图标按钮尺寸 */
 .actions .share-btn, .actions .download-btn, .actions .replace-btn, .actions .delete-btn {
   width: 36px; height: 40px;
+  flex: 0 0 36px;
+}
+
+/* 文件图标：细描边 1.5 + 22px */
+.header h1 svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 1.5;
+}
+
+/* 搜索按钮 hover */
+.search-btn:hover {
+  opacity: 1;
+  border-color: #7a8a6a;
+  color: #7a8a6a;
+}
+
+/* 放大镜图标位置（小样 left:4px，垂直居中对齐 input） */
+.search-row {
+  align-items: center;
+}
+.search-row > svg {
+  left: 4px;
+  top: auto;
+  transform: none;
+}
+
+/* 五星大小 */
+.favorite-btn svg {
+  width: 16px;
+  height: 16px;
 }
