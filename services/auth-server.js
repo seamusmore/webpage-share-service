@@ -1202,7 +1202,7 @@ const server = http.createServer(async (req, res) => {
         res.end(JSON.stringify({ error: 'Theme not found' }));
         return;
       }
-      res.writeHead(200, { 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'no-cache' });
+      res.writeHead(200, { 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=300' });
       res.end(fs.readFileSync(real));
       return;
     }
