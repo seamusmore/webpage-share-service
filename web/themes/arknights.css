@@ -274,3 +274,6 @@ body {
   border: none !important;
   box-shadow: 0 0 24px rgba(255, 107, 53, 0.5);
 }
+
+/* 文件图标颜色 */
+.header h1 > svg { color: #ff6b35; }
