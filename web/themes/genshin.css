@@ -382,9 +382,10 @@ body { padding: 32px 20px; }
   box-shadow: 0 4px 10px rgba(154, 125, 74, 0.3);
 }
 
-/* 文件图标颜色（小样深金，≠ accent） */
+/* 文件图标：深金色 + 细描边1.5（小样） */
 .header h1 > svg {
   color: #9a7d4a;
+  stroke-width: 1.5;
 }
 
 /* 搜索框：1px 边框 + 默认内阴影 */
