@@ -262,8 +262,8 @@ body { padding: 32px 20px; }
   font-size: 12px;
 }
 
-/* 操作区间距 */
-.actions { gap: 8px; }
+/* 操作区间距 + 等高拉伸（小样 stretch） */
+.actions { gap: 8px; align-items: stretch; }
 
 /* 打开按钮 */
 .open-btn {
@@ -347,9 +347,10 @@ body { padding: 32px 20px; }
   font-weight: 600;
 }
 
-/* card-index 首字母大写（覆盖骨架 uppercase） */
+/* card-index 首字母大写（覆盖骨架 uppercase） + 斜体（小样） */
 .card-index {
   text-transform: none;
+  font-style: italic;
 }
 
 /* 刷新箭头：15px（照小样） */
