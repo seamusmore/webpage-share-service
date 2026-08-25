@@ -238,6 +238,7 @@ body { padding: 32px 20px; }
 .nav { gap: 10px; }
 .nav a, .nav label, .nav button {
   font-size: 13px; padding: 10px 20px;
+  transition: all 0.25s;
 }
 
 /* 搜索框 */
@@ -303,7 +304,7 @@ body { padding: 32px 20px; }
   transform: translateY(-1px);
   box-shadow: 0 4px 10px rgba(154, 125, 74, 0.3);
 }
-.upload-btn:hover {
+.nav .upload-btn:hover {
   box-shadow: 0 4px 14px rgba(154, 125, 74, 0.5);
 }
 
