@@ -113,6 +113,8 @@
 
   --star-active: #ff6b35;
   --star-idle: #444;
+  --meta-filename: #666;
+  --meta-time: #444;
 
   --card-index-display: block;
   --card-index-color: #555;
@@ -145,13 +147,19 @@ body {
 .nav a, .nav label, .nav button,
 .search-btn,
 .open-btn,
-.icon-btn,
+.actions .share-btn,
+.actions .download-btn,
+.actions .replace-btn,
+.actions .delete-btn,
 .upload-btn {
   clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
 }
 .refresh-btn { clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); }
 .badge { clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%); }
-.icon-btn { clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
+.actions .share-btn,
+.actions .download-btn,
+.actions .replace-btn,
+.actions .delete-btn { clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
 .search-input { clip-path: none; }
 
 /* 卡片右上斜切阴影 */

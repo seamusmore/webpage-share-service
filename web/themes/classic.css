@@ -1,38 +1,45 @@
-/* ============ Classic · 紫蓝渐变（现状原版） ============ */
+/* ============ Classic · 原版紫蓝渐变（一比一迁移） ============ */
 :root {
   --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
 
+  /* 背景 */
   --bg-body: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --bg-header: #ffffff;
+  --bg-header: white;
   --bg-card: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   --bg-card-hover: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   --bg-input: #ffffff;
 
+  /* 文字 */
   --fg-text: #1f2937;
   --fg-text-strong: #1f2937;
-  --fg-text-muted: #6b7280;
-  --fg-text-faint: #9ca3af;
+  --fg-text-muted: #9ca3af;
+  --fg-text-faint: #6b7280;
 
+  /* 边框/阴影 */
   --border-card: rgba(102, 126, 234, 0.1);
   --border-card-hover: rgba(102, 126, 234, 0.2);
   --border-input: #e2e8f0;
-
-  --accent: #667eea;
-  --accent-hover: #5568d3;
-  --accent-soft: rgba(102, 126, 234, 0.1);
 
   --shadow-card: 0 4px 20px rgba(102, 126, 234, 0.15);
   --shadow-card-hover: 0 12px 40px rgba(102, 126, 234, 0.25);
   --shadow-header: 0 10px 40px rgba(0, 0, 0, 0.2);
 
+  /* 圆角 */
   --radius-header: 16px;
   --radius-card: 16px;
   --btn-radius: 8px;
 
+  /* 强调色 */
+  --accent: #667eea;
+  --accent-hover: #5568d3;
+  --accent-soft: rgba(102, 126, 234, 0.1);
+
+  /* 徽章 */
   --badge-bg: #eef2ff;
   --badge-border: #e0e7ff;
   --badge-fg: #667eea;
 
+  /* 刷新按钮 */
   --refresh-bg: #f3f4f6;
   --refresh-border: #e5e7eb;
   --refresh-fg: #667eea;
@@ -40,18 +47,21 @@
   --refresh-border-hover: #c7d2fe;
   --refresh-fg-hover: #5568d3;
 
+  /* 用户信息 */
   --user-info-bg: #f3f4f6;
 
+  /* 导航按钮（含上传、退出登录，原版统一紫色） */
   --btn-nav-bg: #667eea;
-  --btn-nav-fg: #ffffff;
+  --btn-nav-fg: white;
   --btn-nav-bg-hover: #5568d3;
-  --btn-primary-bg: #10b981;
-  --btn-primary-bg-hover: #059669;
+  --btn-primary-bg: #667eea;
+  --btn-primary-bg-hover: #5568d3;
   --btn-primary-fg: #ffffff;
   --btn-danger-bg: #667eea;
   --btn-danger-bg-hover: #5568d3;
   --btn-danger-fg: #ffffff;
 
+  /* 搜索 */
   --search-bg: #ffffff;
   --search-border: #e2e8f0;
   --search-icon-color: #9ca3af;
@@ -59,12 +69,14 @@
   --btn-search-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   --btn-search-fg: #ffffff;
 
+  /* 打开页面按钮（绿色渐变） */
   --btn-open-bg: linear-gradient(135deg, #10b981 0%, #059669 100%);
   --btn-open-bg-hover: linear-gradient(135deg, #059669 0%, #047857 100%);
-  --btn-open-fg: #ffffff;
+  --btn-open-fg: white;
   --btn-open-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
   --btn-open-shadow-hover: 0 4px 12px rgba(16, 185, 129, 0.4);
 
+  /* 图标按钮：分享（靛）/ 下载（蓝）/ 更新（橙）/ 删除（红） */
   --btn-icon-bg: #ffffff;
   --btn-icon-fg: #64748b;
   --btn-icon-border: #e5e7eb;
@@ -103,18 +115,21 @@
   --btn-delete-fg-hover: #ef4444;
   --btn-delete-shadow-hover: 0 4px 12px rgba(239, 68, 68, 0.25);
 
+  /* 收藏星 */
   --star-active: #f59e0b;
   --star-idle: #d1d5db;
 
-  --card-index-display: none;
+  /* 卡片文件名/时间文字色 */
+  --meta-filename: #64748b;
+  --meta-time: #9ca3af;
 
   /* 卡片顶部装饰条 */
   --card-top-accent: '';
   --card-top-accent-height: 4px;
   --card-top-accent-bg: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
   --card-top-accent-scale: 0;
+
+  --card-index-display: none;
 }
 
-body {
-  background: var(--bg-body);
-}
+body { background: var(--bg-body); }
