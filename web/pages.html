@@ -75,7 +75,7 @@
     }
     .nav a:hover, .nav label:hover, .nav button:hover {
       background: var(--btn-nav-bg-hover);
-      border-color: var(--btn-nav-border-hover, transparent);
+      border-color: var(--btn-nav-border-hover, var(--btn-nav-border, transparent));
       color: var(--btn-nav-fg-hover, var(--btn-nav-fg));
     }
     #file-input { display: none; }
@@ -84,8 +84,8 @@
     .logout-btn { background: var(--btn-danger-bg) !important; color: var(--btn-danger-fg, var(--btn-nav-fg)) !important; margin-left: auto; border: var(--btn-danger-border, var(--btn-nav-border, none)) !important; }
     .logout-btn:hover {
       background: var(--btn-danger-bg-hover) !important;
-      border-color: var(--btn-danger-border-hover, transparent) !important;
-      color: var(--btn-danger-fg-hover, var(--btn-danger-fg, var(--btn-nav-fg))) !important;
+      border-color: var(--btn-danger-border-hover, var(--btn-nav-border-hover, var(--btn-danger-border))) !important;
+      color: var(--btn-danger-fg-hover, var(--btn-nav-fg-hover, var(--btn-danger-fg))) !important;
     }
     .user-info {
       padding: 10px 20px; background: var(--user-info-bg);
