@@ -5,7 +5,7 @@
   --bg-body: #2b3a55;
   --bg-header: linear-gradient(180deg, rgba(240, 230, 200, 0.97) 0%, rgba(230, 218, 185, 0.97) 100%);
   --bg-card: linear-gradient(180deg, rgba(240, 230, 200, 0.94) 0%, rgba(225, 210, 175, 0.94) 100%);
-  --bg-card-hover: linear-gradient(180deg, rgba(245, 235, 210, 0.97) 0%, rgba(230, 218, 190, 0.97) 100%);
+  --bg-card-hover: linear-gradient(180deg, rgba(240, 230, 200, 0.94) 0%, rgba(225, 210, 175, 0.94) 100%);
   --bg-input: rgba(255, 250, 230, 0.6);
 
   --fg-text: #6a5428;
@@ -271,4 +271,75 @@ body { padding: 32px 20px; }
 /* 图标按钮尺寸 */
 .actions .share-btn, .actions .download-btn, .actions .replace-btn, .actions .delete-btn {
   width: 38px; height: 42px;
+}
+
+/* ===== 原稿补充还原 ===== */
+
+/* 刷新按钮：顶部内高光 + hover 旋转 */
+.refresh-btn {
+  box-shadow: 0 2px 4px rgba(154, 125, 74, 0.2), inset 0 1px 0 rgba(255, 248, 220, 0.6);
+}
+.refresh-btn:hover {
+  transform: rotate(180deg);
+}
+
+/* 数字徽章：亮光 + 文字阴影 */
+.page-count {
+  box-shadow: 0 2px 4px rgba(154, 125, 74, 0.3), inset 0 1px 0 rgba(255, 248, 220, 0.4);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+/* 顶部按钮（含上传）：默认亮光 + 文字阴影 */
+.nav a, .nav label, .nav button {
+  box-shadow: 0 2px 6px rgba(154, 125, 74, 0.2), inset 0 1px 0 rgba(255, 248, 220, 0.6);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.upload-btn {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* 顶部按钮 hover 动效 */
+.nav a:hover, .nav label:hover, .nav button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(154, 125, 74, 0.3);
+}
+.upload-btn:hover {
+  box-shadow: 0 4px 14px rgba(154, 125, 74, 0.5);
+}
+
+/* 搜索框激活 */
+.search-input:focus {
+  background: rgba(255, 252, 240, 0.9);
+  border-color: #9a7d4a;
+  box-shadow: inset 0 2px 4px rgba(154, 125, 74, 0.1), 0 0 0 3px rgba(212, 182, 120, 0.25);
+}
+
+/* 搜索按钮：默认亮光 + hover 动效 */
+.search-btn {
+  box-shadow: 0 2px 6px rgba(154, 125, 74, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+.search-btn:hover {
+  opacity: 1;
+  box-shadow: 0 4px 12px rgba(154, 125, 74, 0.5);
+  transform: translateY(-1px);
+}
+
+/* 五星：18px + 选中描边 + hover 旋转 */
+.favorite-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 1.5;
+}
+.favorite-btn .star-active {
+  stroke: #b08838;
+}
+.favorite-btn:hover {
+  transform: scale(1.25) rotate(15deg);
+}
+
+/* 打开按钮：文字阴影 + 字重 */
+.open-btn {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  font-weight: 600;
 }
