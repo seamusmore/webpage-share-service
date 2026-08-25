@@ -274,6 +274,13 @@ body { padding: 32px 20px; }
   stroke-width: 1.5;
 }
 
+/* 刷新箭头：14px 细描边 */
+.refresh-btn svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.5;
+}
+
 /* 搜索按钮 hover */
 .search-btn:hover {
   opacity: 1;
