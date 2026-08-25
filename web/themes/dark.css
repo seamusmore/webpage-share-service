@@ -154,7 +154,8 @@ body { padding: 32px 20px; }
 .search-input:focus { border-color: #818cf8; box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2); }
 .search-btn { padding: 10px 20px; font-size: 13px; }
 .search-btn:hover { opacity: 1; background: #475569; }
-.nav .upload-btn:hover { box-shadow: 0 4px 18px rgba(99, 102, 241, 0.55); }
+/* 上传按钮 hover：只改阴影（小样不改背景、无位移，同 open-btn） */
+.nav .upload-btn:hover { background: linear-gradient(135deg, #818cf8, #6366f1) !important; box-shadow: 0 4px 18px rgba(99, 102, 241, 0.55); transform: none; }
 
 /* 打开按钮 hover：只改阴影（小样不改背景、无位移） */
 .open-btn:hover { background: linear-gradient(135deg, #818cf8, #6366f1); transform: none; }
