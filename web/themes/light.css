@@ -44,15 +44,19 @@
 
   --btn-nav-bg: #ffffff;
   --btn-nav-fg: #475569;
-  --btn-nav-bg-hover: #f8fafc;
+  --btn-nav-bg-hover: #ffffff;
   --btn-nav-border: 1px solid #e5e7eb;
+  --btn-nav-border-hover: #cbd5e1;
+  --btn-nav-fg-hover: #0f172a;
   --btn-primary-bg: #667eea;
   --btn-primary-bg-hover: #5568d3;
   --btn-primary-fg: #ffffff;
   --btn-danger-bg: #ffffff;
-  --btn-danger-bg-hover: #f8fafc;
+  --btn-danger-bg-hover: #ffffff;
   --btn-danger-fg: #475569;
+  --btn-danger-fg-hover: #0f172a;
   --btn-danger-border: 1px solid #e5e7eb;
+  --btn-danger-border-hover: #cbd5e1;
 
   --search-bg: #ffffff;
   --search-border: #e2e8f0;
@@ -142,7 +146,27 @@ body { padding: 32px 20px; }
 
 /* 搜索框 */
 .search-input { padding: 10px 14px 10px 38px; border-width: 1px; }
+.search-input:focus { box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.12); }
 .search-btn { padding: 10px 20px; font-size: 13px; }
+.search-btn:hover { opacity: 1; background: #1e293b; }
+
+/* 打开按钮 hover：只改背景（小样无阴影、无位移） */
+.open-btn:hover { box-shadow: none; transform: none; }
+
+/* 图标按钮 hover：无位移（小样只改颜色） */
+.actions .share-btn:hover,
+.actions .download-btn:hover,
+.actions .replace-btn:hover,
+.actions .delete-btn:hover { transform: none; }
+
+/* 卡片 hover 位移 -2px（骨架 -6px） */
+.page-card:hover { transform: translateY(-2px); }
+
+/* 重命名图标 hover：只改 opacity（小样无缩放） */
+.rename-icon:hover { transform: none; }
+
+/* 收藏星 hover：scale 1.15（骨架 1.2） */
+.favorite-btn:hover { transform: scale(1.15); }
 
 /* 卡片网格 */
 .pages-grid { grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); }
