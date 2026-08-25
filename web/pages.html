@@ -125,14 +125,14 @@
     }
     .page-card .actions .download-btn,
     .page-card .actions .delete-btn,
-    .page-card .actions .share-btn {
-      flex: 0 0 44px;
-      width: 44px;
-      height: 42px;
+    .page-card .actions .share-btn,
+    .page-card .actions .replace-btn {
+      flex: 0 0 34px;
+      width: 34px;
+      height: 34px;
       padding: 0;
       border: 1px solid;
-      border-radius: 10px;
-      font-size: 18px;
+      border-radius: 8px;
       cursor: pointer;
       transition: all 0.3s ease;
       display: flex;
@@ -170,6 +170,17 @@
       background: linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 100%) !important;
       border-color: rgba(74, 120, 217, 0.4);
       box-shadow: 0 4px 12px rgba(74, 120, 217, 0.25);
+      transform: translateY(-1px);
+    }
+    .page-card .actions .replace-btn {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+      color: #d97706;
+      border-color: rgba(217, 119, 6, 0.2);
+    }
+    .page-card .actions .replace-btn:hover {
+      background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%) !important;
+      border-color: rgba(217, 119, 6, 0.4);
+      box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);
       transform: translateY(-1px);
     }
     .empty-state {
@@ -211,7 +222,11 @@
           <input type="file" id="file-input" accept=".html,.htm">
         </div>
       </div>
-
+      <div style="display: flex; gap: 10px; margin-top: 16px; position: relative;">
+        <input type="text" id="search-input" placeholder="🔍 输入名称搜索..." style="flex: 1; padding: 10px 36px 10px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'" onkeydown="if(event.key==='Enter')filterPages()" oninput="toggleClearBtn()">
+        <span id="search-clear-btn" onclick="clearSearch()" style="position: absolute; right: 116px; top: 50%; transform: translateY(-50%); font-size: 16px; cursor: pointer; color: #9ca3af; display: none; user-select: none; line-height: 1;">✕</span>
+        <button id="search-btn" onclick="filterPages()" style="padding: 10px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 14px; cursor: pointer; transition: opacity 0.2s; white-space: nowrap;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">搜索</button>
+      </div>
     </div>
     <div id="pages-container" class="pages-grid"></div>
   </div>
@@ -265,6 +280,7 @@
     let isLoggedIn = false;
     let currentUser = null;
     let currentApiKey = null;
+    let allPagesData = [];
     
     // 强制登录检查 - 未登录重定向到首页（带原页面地址）
     async function forceAuth() {
@@ -479,25 +495,12 @@
         const data = await res.json();
         const container = document.getElementById('pages-container');
         if (!data.success || data.pages.length === 0) {
+          allPagesData = [];
           container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><h2>还没有页面</h2><p>上传 HTML 文件后这里会显示列表</p></div>';
           return;
         }
-        container.innerHTML = '';
-        data.pages.forEach(page => {
-          const filename = page.filename;
-          // 使用页面返回的 display_name，如果没有则使用默认计算逻辑
-          let displayName = page.display_name || filename.replace(/\.(html|htm)$/i, '');
-          displayName = displayName.replace(/^\d+-upload-/, ''); // 去掉 "1775636865994-upload-"
-          displayName = displayName.replace(/^\d+-/, ''); // 去掉时间戳 "1775638360619-"
-          displayName = displayName.replace(/-/g, ' ').replace(/_/g, ' '); // 替换分隔符为空格
-          
-          const card = document.createElement('div');
-          card.className = 'page-card';
-          const tenantId = currentUser?.tenant_id || currentUser?.open_id || 'default';
-          const shareUrl = window.location.origin + '/' + tenantId + '/pages/' + encodeURIComponent(filename);
-          card.innerHTML = '<h3 data-display-name="' + displayName + '">' + displayName + ' <span class="rename-icon" onclick="renamePage(\'' + filename + '\')">✏️</span></h3><p style="font-size: 11px; color: #64748b; margin-top: 4px;">📄 ' + filename + '</p><div class="actions"><a href="/' + tenantId + '/pages/' + encodeURIComponent(filename) + '" target="_blank">🚀 打开页面</a><button class="share-btn" onclick="sharePage(\'' + filename + '\', \'' + shareUrl + '\')">🔗</button><button class="download-btn" onclick="downloadPage(\'' + filename + '\')">⬇️</button><button class="delete-btn" onclick="deletePage(\'' + filename + '\')">🗑️</button></div>';
-          container.appendChild(card);
-        });
+        allPagesData = data.pages;
+        renderPages(data.pages);
       } catch (err) {
         document.getElementById('pages-container').innerHTML = '<div class="empty-state"><div class="icon">❌</div><h2>加载失败</h2><p>' + err.message + '</p></div>';
       }
@@ -555,7 +558,89 @@
         document.body.removeChild(textArea);
       }
     }
-    
+
+    function renderPages(pages) {
+      const container = document.getElementById('pages-container');
+      container.innerHTML = '';
+      if (pages.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><h2>没有匹配的页面</h2><p>试试其他关键词</p></div>';
+        return;
+      }
+      pages.forEach(page => {
+        const filename = page.filename;
+        let displayName = page.display_name || filename.replace(/\.(html|htm)$/i, '');
+        displayName = displayName.replace(/^\d+-upload-/, '');
+        displayName = displayName.replace(/^\d+-/, '');
+        displayName = displayName.replace(/-/g, ' ').replace(/_/g, ' ');
+
+        const card = document.createElement('div');
+        card.className = 'page-card';
+        const tenantId = currentUser?.tenant_id || currentUser?.open_id || 'default';
+        const shareUrl = window.location.origin + '/' + tenantId + '/pages/' + encodeURIComponent(filename);
+        const createdDate = page.createdAt ? new Date(page.createdAt).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+        card.innerHTML = '<h3 data-display-name="' + displayName + '">' + displayName + ' <span class="rename-icon" onclick="renamePage(\'' + filename + '\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span></h3><p style="font-size: 11px; color: #64748b; margin-top: 4px;">📄 ' + filename + (createdDate ? ' · 🕐 ' + createdDate : '') + '</p><div class="actions"><a href="/' + tenantId + '/pages/' + encodeURIComponent(filename) + '" target="_blank">🚀 打开页面</a><button class="share-btn" onclick="sharePage(\'' + filename + '\', \'' + shareUrl + '\')" title="分享"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button><button class="download-btn" onclick="downloadPage(\'' + filename + '\')" title="下载"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><button class="replace-btn" onclick="replacePage(\'' + filename + '\')" title="更新文件"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button><button class="delete-btn" onclick="deletePage(\'' + filename + '\')" title="删除"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button></div>';
+        container.appendChild(card);
+      });
+    }
+
+    function filterPages() {
+      const keyword = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
+      toggleClearBtn();
+      if (!keyword) {
+        renderPages(allPagesData);
+        return;
+      }
+      const filtered = allPagesData.filter(page => {
+        const filename = (page.filename || '').toLowerCase();
+        const displayName = (page.display_name || page.filename || '').toLowerCase();
+        return filename.includes(keyword) || displayName.includes(keyword);
+      });
+      renderPages(filtered);
+    }
+
+    function toggleClearBtn() {
+      const input = document.getElementById('search-input');
+      const clearBtn = document.getElementById('search-clear-btn');
+      if (!input || !clearBtn) return;
+      clearBtn.style.display = input.value ? 'block' : 'none';
+    }
+
+    function clearSearch() {
+      document.getElementById('search-input').value = '';
+      toggleClearBtn();
+      renderPages(allPagesData);
+    }
+
+    async function replacePage(filename) {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.html,.htm';
+      input.onchange = async () => {
+        const file = input.files[0];
+        if (!file) return;
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          showToast('⏳ 正在更新...', 'success');
+          const res = await fetch('/api/replace?filename=' + encodeURIComponent(filename), {
+            method: 'POST',
+            headers: { 'X-API-Key': currentApiKey || '' },
+            body: formData
+          });
+          const data = await res.json();
+          if (data.success) {
+            showToast('✅ 文件已更新', 'success');
+            loadPages();
+          } else {
+            showToast('❌ 更新失败: ' + (data.error || '未知错误'), 'error');
+          }
+        } catch (err) {
+          showToast('❌ 更新失败: ' + err.message, 'error');
+        }
+      };
+      input.click();
+    }
+
     async function downloadPage(filename) {
       try {
         const res = await fetch('/api/download?filename=' + encodeURIComponent(filename), {

@@ -607,6 +607,110 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     
+    // 6.5. API - 替换文件（需要 API_KEY）
+    if (url.pathname === '/api/replace' && req.method === 'POST') {
+      const apiKey = req.headers['x-api-key'];
+      if (!apiKey) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '缺少 API_KEY' }));
+        return;
+      }
+
+      const tenant = await getTenantByApiKey(apiKey);
+      if (!tenant) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '无效的 API_KEY' }));
+        return;
+      }
+
+      const targetFilename = url.searchParams.get('filename');
+      if (!targetFilename) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '缺少 filename 参数' }));
+        return;
+      }
+
+      const targetPath = path.join(tenant.storage_path, targetFilename);
+      if (!fs.existsSync(targetPath)) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '文件不存在: ' + targetFilename }));
+        return;
+      }
+
+      const contentType = req.headers['content-type'] || '';
+      if (!contentType.includes('multipart/form-data')) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid content type' }));
+        return;
+      }
+
+      const boundary = extractBoundary(contentType);
+      if (!boundary) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid boundary' }));
+        return;
+      }
+
+      const chunks = [];
+      req.on('data', chunk => chunks.push(chunk));
+      req.on('end', () => {
+        try {
+          const body = Buffer.concat(chunks);
+          const boundaryStr = Buffer.from('--' + boundary);
+
+          const parts = [];
+          let start = 0;
+          let idx;
+          while ((idx = body.indexOf(boundaryStr, start)) !== -1) {
+            parts.push(body.slice(start, idx));
+            start = idx + boundaryStr.length;
+          }
+
+          let fileData = null;
+
+          for (const part of parts) {
+            if (part.length === 0) continue;
+            const headerEnd = part.indexOf(Buffer.from('\r\n\r\n'));
+            if (headerEnd === -1) continue;
+
+            const dataStart = headerEnd + 4;
+            fileData = part.slice(dataStart);
+
+            const trailingBoundary = Buffer.from('\r\n--');
+            const trailingNewline = Buffer.from('\r\n');
+            if (fileData.slice(-trailingBoundary.length).equals(trailingBoundary)) {
+              fileData = fileData.slice(0, -trailingBoundary.length);
+            }
+            if (fileData.slice(-trailingNewline.length).equals(trailingNewline)) {
+              fileData = fileData.slice(0, -trailingNewline.length);
+            }
+          }
+
+          if (!fileData) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'No file data found' }));
+            return;
+          }
+
+          // 直接覆盖原文件
+          fs.writeFileSync(targetPath, fileData);
+          console.log(`✅ 文件已替换：${tenant.id}/${targetFilename} (${fileData.length} bytes)`);
+
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            success: true,
+            filename: targetFilename,
+            url: BASE_URL ? `${BASE_URL}/${tenant.id}/pages/${targetFilename}` : `/${tenant.id}/pages/${targetFilename}`
+          }));
+        } catch (err) {
+          console.error('❌ 替换文件错误:', err);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: '文件替换失败：' + err.message }));
+        }
+      });
+      return;
+    }
+
     // 7. API - 文件列表（需要 API_KEY）
     if (url.pathname === '/api/list' && req.method === 'GET') {
       const apiKey = req.headers['x-api-key'];
