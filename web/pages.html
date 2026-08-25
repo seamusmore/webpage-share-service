@@ -389,8 +389,8 @@
   <!-- 主题选择器 -->
   <div id="theme-modal" class="theme-modal">
     <div class="theme-modal-inner">
-      <button id="close-theme-modal" class="theme-modal-close">✕</button>
-      <h2 class="theme-modal-title">🎨 选择主题</h2>
+      <button id="close-theme-modal" class="theme-modal-close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <h2 class="theme-modal-title"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px;margin-right:6px;"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>选择主题</h2>
       <div class="theme-grid" id="theme-grid"></div>
     </div>
   </div>
@@ -398,19 +398,19 @@
   <!-- API Key 管理弹窗 -->
   <div id="apikey-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
     <div style="background:var(--bg-header); border-radius:16px; padding:32px; max-width:480px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.3); position:relative; border:1px solid var(--border-card);">
-      <button id="close-apikey-modal" style="position:absolute; top:16px; right:16px; background:none; border:none; font-size:20px; cursor:pointer; color:var(--fg-text-muted); line-height:1; padding:4px;">✕</button>
-      <h2 style="color:var(--fg-text-strong); font-size:20px; margin-bottom:24px; font-weight:600;">🔧 配置信息</h2>
+      <button id="close-apikey-modal" style="position:absolute; top:16px; right:16px; background:none; border:none; cursor:pointer; color:var(--fg-text-muted); line-height:1; padding:4px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <h2 style="color:var(--fg-text-strong); font-size:20px; margin-bottom:24px; font-weight:600;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px;margin-right:6px;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>配置信息</h2>
       <div style="display:grid; gap:16px;">
         <div>
           <label style="display:block; color:var(--fg-text-muted); font-size:12px; margin-bottom:6px; font-weight:500;">租户 ID</label>
           <code id="modal-tenant-id" style="background:var(--bg-input); padding:10px 12px; border-radius:8px; display:block; color:var(--fg-text-strong); font-size:13px; word-break:break-all; border:1px solid var(--border-input); font-family:monospace;">加载中...</code>
         </div>
         <div>
-          <label style="display:block; color:var(--fg-text-muted); font-size:12px; margin-bottom:6px; font-weight:500;">API_KEY <button id="toggle-modal-apikey" style="background:none; border:none; cursor:pointer; font-size:14px; padding:0 4px;" title="显示/隐藏">👁️</button></label>
+          <label style="display:block; color:var(--fg-text-muted); font-size:12px; margin-bottom:6px; font-weight:500;">API_KEY <button id="toggle-modal-apikey" style="background:none; border:none; cursor:pointer; padding:0 4px; color:var(--fg-text-muted); vertical-align:middle;" title="显示/隐藏"><svg id="apikey-eye-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></label>
           <div style="display:flex; gap:8px; align-items:stretch;">
             <code id="modal-api-key" style="background:var(--bg-input); padding:10px 12px; border-radius:8px; display:block; color:var(--fg-text-strong); font-size:13px; word-break:break-all; border:1px solid var(--border-input); flex:1; font-family:monospace;" data-is-masked="true">加载中...</code>
             <button id="copy-apikey-btn" style="background:var(--accent); color:white; border:none; border-radius:8px; padding:10px 16px; font-size:14px; cursor:pointer; white-space:nowrap; transition:background 0.2s;"
-              onmouseover="this.style.background='var(--accent-hover)'" onmouseout="this.style.background='var(--accent)'">📋 拷贝</button>
+              onmouseover="this.style.background='var(--accent-hover)'" onmouseout="this.style.background='var(--accent)'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>拷贝</button>
           </div>
         </div>
       </div>
@@ -530,7 +530,7 @@
         });
       } catch (err) {
         console.warn('保存主题失败', err);
-        showToast('⚠️ 主题未保存（网络异常）', 'error');
+        showToast('主题未保存（网络异常）', 'error');
       }
     }
 
@@ -549,7 +549,7 @@
     async function selectTheme(themeId) {
       applyTheme(themeId);
       await saveThemePreference(themeId);
-      showToast('🎨 已切换到「' + (THEMES.find(t => t.id === themeId)?.name || themeId) + '」');
+      showToast('已切换到「' + (THEMES.find(t => t.id === themeId)?.name || themeId) + '」');
     }
 
     // 主题弹窗事件
@@ -658,7 +658,7 @@
       }
       try {
         await navigator.clipboard.writeText(apiKey);
-        showToast('✅ API_KEY 已拷贝到剪贴板', 'success');
+        showToast('API_KEY 已拷贝到剪贴板', 'success');
       } catch (err) {
         const textarea = document.createElement('textarea');
         textarea.value = apiKey;
@@ -668,24 +668,26 @@
         textarea.select();
         try {
           document.execCommand('copy');
-          showToast('✅ API_KEY 已拷贝到剪贴板', 'success');
+          showToast('API_KEY 已拷贝到剪贴板', 'success');
         } catch (fallbackErr) {
-          showToast('❌ 拷贝失败，请手动复制', 'error');
+          showToast('拷贝失败，请手动复制', 'error');
         }
         document.body.removeChild(textarea);
       }
     });
 
     // 切换 API_KEY 显示/隐藏
+    const eyeOpen = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+    const eyeClosed = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
     document.getElementById('toggle-modal-apikey')?.addEventListener('click', function() {
       const apiKeyEl = document.getElementById('modal-api-key');
       if (apiKeyEl.dataset.isMasked === 'true') {
         apiKeyEl.textContent = apiKeyEl.dataset.fullKey;
-        this.textContent = '🙈';
+        this.innerHTML = eyeClosed;
         apiKeyEl.dataset.isMasked = 'false';
       } else {
         apiKeyEl.textContent = apiKeyEl.dataset.maskedKey;
-        this.textContent = '👁️';
+        this.innerHTML = eyeOpen;
         apiKeyEl.dataset.isMasked = 'true';
       }
     });
@@ -771,7 +773,10 @@
     
     function showToast(message, type = 'success') {
       const toast = document.getElementById('toast');
-      toast.textContent = message;
+      const iconSuccess = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;vertical-align:-3px;margin-right:8px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+      const iconError = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;vertical-align:-3px;margin-right:8px;"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+      const icon = type === 'error' ? iconError : (type === 'success' ? iconSuccess : '');
+      toast.innerHTML = icon + message;
       toast.className = 'toast show ' + type;
       setTimeout(() => toast.className = 'toast', 3000);
     }
@@ -781,7 +786,7 @@
       // loadPages 会重置渲染，若搜索框有关键词则重新过滤
       const keyword = (document.getElementById('search-input')?.value || '').trim();
       if (keyword) filterPages();
-      showToast('🔄 列表已刷新');
+      showToast('列表已刷新');
     }
 
     async function loadPages() {
@@ -812,7 +817,7 @@
       const file = e.target.files[0];
       if (!file) return;
       if (!file.name.endsWith('.html') && !file.name.endsWith('.htm')) {
-        showToast('❌ 请上传 HTML 文件', 'error');
+        showToast('请上传 HTML 文件', 'error');
         return;
       }
       const formData = new FormData();
@@ -827,13 +832,13 @@
         });
         const data = await res.json();
         if (data.success) {
-          showToast('✅ 上传成功：' + file.name);
+          showToast('上传成功：' + file.name);
           loadPages();
         } else {
-          showToast('❌ 上传失败：' + data.error, 'error');
+          showToast('上传失败：' + data.error, 'error');
         }
       } catch (err) {
-        showToast('❌ 上传失败：' + err.message, 'error');
+        showToast('上传失败：' + err.message, 'error');
       }
       e.target.value = '';
     });
@@ -842,7 +847,7 @@
       try {
         // 复制到剪贴板
         await navigator.clipboard.writeText(shareUrl);
-        showToast('🔗 分享链接已复制！', 'success');
+        showToast('分享链接已复制！', 'success');
       } catch (err) {
         // 降级方案：选中 textarea 内容
         const textArea = document.createElement('textarea');
@@ -853,9 +858,9 @@
         textArea.select();
         try {
           document.execCommand('copy');
-          showToast('🔗 分享链接已复制！', 'success');
+          showToast('分享链接已复制！', 'success');
         } catch (fallbackErr) {
-          showToast('❌ 复制失败，请手动复制链接', 'error');
+          showToast('复制失败，请手动复制链接', 'error');
         }
         document.body.removeChild(textArea);
       }
@@ -957,10 +962,10 @@
           });
           renderPages(pages);
         } else {
-          showToast('❌ 操作失败', 'error');
+          showToast('操作失败', 'error');
         }
       } catch (err) {
-        showToast('❌ 收藏失败: ' + err.message, 'error');
+        showToast('收藏失败: ' + err.message, 'error');
       }
     }
 
@@ -987,7 +992,7 @@
         try {
           const formData = new FormData();
           formData.append('file', file);
-          showToast('⏳ 正在更新...', 'success');
+          showToast('正在更新...', 'success');
           const res = await fetch('/api/replace?filename=' + encodeURIComponent(filename), {
             method: 'POST',
             headers: { 'X-API-Key': currentApiKey || '' },
@@ -995,13 +1000,13 @@
           });
           const data = await res.json();
           if (data.success) {
-            showToast('✅ 文件已更新', 'success');
+            showToast('文件已更新', 'success');
             loadPages();
           } else {
-            showToast('❌ 更新失败: ' + (data.error || '未知错误'), 'error');
+            showToast('更新失败: ' + (data.error || '未知错误'), 'error');
           }
         } catch (err) {
-          showToast('❌ 更新失败: ' + err.message, 'error');
+          showToast('更新失败: ' + err.message, 'error');
         }
       };
       input.click();
@@ -1040,9 +1045,9 @@
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         
-        showToast('⬇️ 开始下载：' + downloadName);
+        showToast('开始下载：' + downloadName);
       } catch (err) {
-        showToast('❌ 下载失败：' + err.message, 'error');
+        showToast('下载失败：' + err.message, 'error');
       }
     }
 
@@ -1086,14 +1091,14 @@
           });
           const data = await res.json();
           if (data.success) {
-            showToast('✅ 文件已重命名：' + newFilename);
+            showToast('文件已重命名：' + newFilename);
             loadPages();
           } else {
-            showToast('❌ 重命名失败：' + data.error, 'error');
+            showToast('重命名失败：' + data.error, 'error');
             loadPages();
           }
         } catch (err) {
-          showToast('❌ 更新失败：' + err.message, 'error');
+          showToast('更新失败：' + err.message, 'error');
           loadPages();
         }
       };
@@ -1123,13 +1128,13 @@
         });
         const data = await res.json();
         if (data.success) {
-          showToast('✅ 删除成功：' + filename);
+          showToast('删除成功：' + filename);
           loadPages();
         } else {
-          showToast('❌ 删除失败：' + data.error, 'error');
+          showToast('删除失败：' + data.error, 'error');
         }
       } catch (err) {
-        showToast('❌ 删除失败：' + err.message, 'error');
+        showToast('删除失败：' + err.message, 'error');
       }
     }
   </script>
