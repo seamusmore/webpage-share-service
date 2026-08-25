@@ -57,7 +57,7 @@
   --btn-nav-bg-hover: transparent;
   --btn-nav-fg-hover: #ffffff;
   --btn-nav-border: 1px solid #3a3a3a;
-  --btn-nav-border-hover: 1px solid #666666;
+  --btn-nav-border-hover: #666666;
   --btn-primary-bg: #ff6b35;
   --btn-primary-bg-hover: #ff8a5c;
   --btn-primary-fg: #0a0a0a;
@@ -66,7 +66,7 @@
   --btn-danger-fg: #b0b0b0;
   --btn-danger-fg-hover: #ffffff;
   --btn-danger-border: 1px solid #3a3a3a;
-  --btn-danger-border-hover: 1px solid #666666;
+  --btn-danger-border-hover: #666666;
 
   --btn-letter-spacing: 1px;
   --btn-text-transform: uppercase;
