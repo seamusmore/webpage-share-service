@@ -271,8 +271,9 @@ body { padding: 32px 20px; }
   letter-spacing: 3px; border-radius: 18px;
 }
 
-/* 图标按钮尺寸 */
+/* 图标按钮尺寸（小样38×42，覆盖骨架 flex:0 0 34px） */
 .actions .share-btn, .actions .download-btn, .actions .replace-btn, .actions .delete-btn {
+  flex: 0 0 38px;
   width: 38px; height: 42px;
 }
 
