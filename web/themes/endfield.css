@@ -303,3 +303,9 @@ body { padding: 32px 20px; }
   width: 16px;
   height: 16px;
 }
+
+/* 打开按钮 hover：文字变米白 + 边框灰绿（骨架已还原，这里直接补） */
+.open-btn:hover {
+  color: #f5f4ee;
+  border-color: #7a8a6a;
+}

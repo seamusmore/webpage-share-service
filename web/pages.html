@@ -35,7 +35,7 @@
       letter-spacing: var(--h1-letter-spacing, 0);
       display: flex; align-items: center; gap: 8px;
     }
-    .header h1 > svg { color: var(--accent); flex-shrink: 0; }
+    .header h1 svg { color: var(--accent); flex-shrink: 0; }
     .header p { color: var(--fg-text-muted); font-size: 14px; }
 
     .page-count {
@@ -214,8 +214,6 @@
       background: var(--btn-open-bg-hover);
       box-shadow: var(--btn-open-shadow-hover);
       transform: translateY(-1px);
-      color: var(--btn-open-fg-hover, var(--btn-open-fg));
-      border-color: var(--btn-open-border-hover, var(--btn-open-border, transparent));
     }
     .actions .share-btn,
     .actions .download-btn,
@@ -912,7 +910,7 @@
         let cardIdx = '';
         if (currentTheme === 'arknights') cardIdx = '// DOC_' + idx;
         else if (currentTheme === 'endfield') cardIdx = 'DOC_' + idx + ' · REPORT';
-        else if (currentTheme === 'genshin') cardIdx = 'Doc.' + idx + ' · Simulation Report';
+        else if (currentTheme === 'genshin') cardIdx = 'Doc.' + idx + ' · Report';
 
         const card = document.createElement('div');
         card.className = 'page-card';

@@ -378,3 +378,27 @@ body { padding: 32px 20px; }
   transform: translateY(-2px);
   box-shadow: 0 4px 10px rgba(154, 125, 74, 0.3);
 }
+
+/* 刷新箭头颜色：覆盖骨架 accent，照小样 深金/米白 */
+.header h1 .refresh-btn svg {
+  color: var(--refresh-fg);
+}
+.header h1 .refresh-btn:hover svg {
+  color: var(--refresh-fg-hover);
+}
+
+/* 搜索框：1px 边框 + 默认内阴影 */
+.search-input {
+  border-width: 1px;
+  box-shadow: inset 0 2px 4px rgba(154, 125, 74, 0.1);
+}
+
+/* 上传按钮：深棕边框 */
+.nav .upload-btn {
+  border-color: #7a6338;
+}
+
+/* 打开按钮：transition 0.25s */
+.open-btn {
+  transition: all 0.25s;
+}
