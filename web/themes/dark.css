@@ -105,7 +105,8 @@
   --meta-filename: #94a3b8;
   --meta-time: #475569;
 
-  --card-index-display: none;
+  --card-index-display: block;
+  --card-index-color: #94a3b8;
 
   /* 卡片顶部渐变光带 */
   --card-top-accent: '';
