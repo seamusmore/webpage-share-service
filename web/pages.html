@@ -1220,15 +1220,15 @@
         const gridPos = cards.map(c => c.getBoundingClientRect());
         const target = gridPos[0]; // 收拢目标 = 第0张卡的网格位置
 
-        // 实测各卡片在堆叠态下相对第0张卡的精确偏移（含 scale）
+        // 实测各卡片在堆叠态下相对顶层卡的精确偏移（含 scale）——保持堆形状
         cards.forEach(c => c.classList.add('no-trans'));
         vp.classList.remove('expanded');
         section.classList.remove('expanded-section');
         renderStack(vpId);
         void grid.offsetWidth;
         const stackPosRef = cards.map(c => c.getBoundingClientRect());
-        const stackTopLeft = stackPosRef[0].left;
-        const stackTopTop = stackPosRef[0].top;
+        const stackTopLeft = stackPosRef[topIdx].left;
+        const stackTopTop = stackPosRef[topIdx].top;
         const layerOffsets = stackPosRef.map((p, i) => [
           p.left - stackTopLeft,
           p.top - stackTopTop,
@@ -1276,8 +1276,8 @@
 
           const sibLast = siblings.map(s => s.getBoundingClientRect());
           const stackPos = cards.map(c => c.getBoundingClientRect());
-          const topAbsoluteLeft = stackPos[0].left;
-          const topAbsoluteTop = stackPos[0].top;
+          const topAbsoluteLeft = stackPos[topIdx].left;
+          const topAbsoluteTop = stackPos[topIdx].top;
 
           // pin：钉回收拢末位置
           cards.forEach((c, i) => {
