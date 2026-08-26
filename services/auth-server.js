@@ -68,7 +68,15 @@ try {
         console.log('✅ page_favorites 表已就绪');
       }
     });
-    
+
+    db.run('CREATE TABLE IF NOT EXISTS page_categories (tenant_id TEXT NOT NULL, filename TEXT NOT NULL, category TEXT NOT NULL, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (tenant_id, filename))', function(err) {
+      if (err) {
+        console.error('❌ 创建分类表失败:', err.message);
+      } else {
+        console.log('✅ page_categories 表已就绪');
+      }
+    });
+
     // 迁移：为旧 tenants 表添加 name 列（幂等，已存在则跳过）
     db.run('ALTER TABLE tenants ADD COLUMN name TEXT', function(err) {
       if (err && !err.message.includes('duplicate column')) {
@@ -794,6 +802,65 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // 6.6 API - 分类（POST 设置/清空）
+    if (url.pathname === '/api/categories' && req.method === 'POST') {
+      const apiKey = req.headers['x-api-key'];
+      if (!apiKey) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '缺少 API_KEY' }));
+        return;
+      }
+
+      const tenant = await getTenantByApiKey(apiKey);
+      if (!tenant) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '无效的 API_KEY' }));
+        return;
+      }
+
+      const chunks = [];
+      req.on('data', chunk => chunks.push(chunk));
+      req.on('end', () => {
+        try {
+          const body = JSON.parse(Buffer.concat(chunks).toString());
+          const filename = body.filename;
+          const category = (body.category || '').trim();
+          if (!filename) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: '缺少 filename' }));
+            return;
+          }
+
+          // 空分类 = 删除记录（归为"+ 分类"组）
+          if (!category) {
+            db.run('DELETE FROM page_categories WHERE tenant_id = ? AND filename = ?', [tenant.id, filename], (err) => {
+              if (err) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: err.message }));
+                return;
+              }
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: true, category: null }));
+            });
+          } else {
+            db.run('INSERT OR REPLACE INTO page_categories (tenant_id, filename, category, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)', [tenant.id, filename, category], (err) => {
+              if (err) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: err.message }));
+                return;
+              }
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: true, category: category }));
+            });
+          }
+        } catch (err) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: '请求解析失败' }));
+        }
+      });
+      return;
+    }
+
     // 6.5 API - 主题偏好（GET 读取 / POST 保存）
     const ALLOWED_THEMES = ['classic', 'light', 'dark', 'arknights', 'endfield', 'genshin'];
 
@@ -899,13 +966,16 @@ const server = http.createServer(async (req, res) => {
                 displayName = row.display_name;
               }
               db.get('SELECT 1 FROM page_favorites WHERE tenant_id = ? AND filename = ?', [tenant.id, f], (err, favRow) => {
-                resolve({
-                  filename: f,
-                  display_name: displayName,
-                  url: BASE_URL ? `${BASE_URL}/${tenant.id}/pages/${f}` : `/${tenant.id}/pages/${f}`,
-                  size: stats.size,
-                  createdAt: stats.birthtime,
-                  is_favorite: !!favRow
+                db.get('SELECT category FROM page_categories WHERE tenant_id = ? AND filename = ?', [tenant.id, f], (err, catRow) => {
+                  resolve({
+                    filename: f,
+                    display_name: displayName,
+                    url: BASE_URL ? `${BASE_URL}/${tenant.id}/pages/${f}` : `/${tenant.id}/pages/${f}`,
+                    size: stats.size,
+                    createdAt: stats.birthtime,
+                    is_favorite: !!favRow,
+                    category: catRow ? catRow.category : null
+                  });
                 });
               });
             });
