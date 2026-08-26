@@ -131,6 +131,7 @@
 
   --card-index-display: block;
   --card-index-color: #999;
+  --card-padding: 18px 22px;
 }
 
 body { background: var(--bg-body); background-attachment: fixed; }
