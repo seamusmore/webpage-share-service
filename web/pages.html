@@ -243,6 +243,47 @@
     }
     /* ============ 分组堆叠布局结束 ============ */
 
+    /* ============ 书签标签 ============ */
+    .bookmark-tabs {
+      position: fixed;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 500;
+    }
+    .bookmark-tab {
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      padding: 16px 10px;
+      font-family: var(--font-family, sans-serif);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 4px;
+      cursor: pointer;
+      user-select: none;
+      border: 1px solid var(--accent);
+      border-right: none;
+      border-radius: var(--btn-radius, 8px) 0 0 var(--btn-radius, 8px);
+      background: var(--bg-card);
+      color: var(--fg-text-muted);
+      transition: all 0.2s;
+      box-shadow: -4px 2px 12px rgba(0,0,0,0.15);
+    }
+    .bookmark-tab:hover {
+      color: var(--accent);
+      background: var(--bg-card-hover);
+    }
+    .bookmark-tab.active {
+      background: var(--accent);
+      color: var(--btn-primary-fg, #fff);
+      border-color: var(--accent);
+      box-shadow: -6px 2px 16px rgba(0,0,0,0.2);
+    }
+    /* ============ 书签标签结束 ============ */
+
     .page-card {
       background: var(--bg-card);
       border-radius: var(--radius-card, 16px);
@@ -493,6 +534,10 @@
       </div>
     </div>
     <div id="pages-container" class="groups-grid"></div>
+  </div>
+  <div class="bookmark-tabs">
+    <div class="bookmark-tab active" id="tab-all" onclick="switchView('all')">全部</div>
+    <div class="bookmark-tab" id="tab-fav" onclick="switchView('fav')">收藏</div>
   </div>
   <div id="toast" class="toast"></div>
 
@@ -919,7 +964,11 @@
         }
         allPagesData = data.pages;
         if (countEl) countEl.textContent = formatCount(data.pages.length);
-        renderPages(data.pages);
+        if (currentView === 'fav') {
+          renderPages(data.pages.filter(p => p.is_favorite), true);
+        } else {
+          renderPages(data.pages);
+        }
       } catch (err) {
         document.getElementById('pages-container').innerHTML = '<div class="empty-state"><div class="icon">❌</div><h2>加载失败</h2><p>' + err.message + '</p></div>';
       }
@@ -1378,7 +1427,7 @@
     }
 
     // 分组 + 堆叠渲染
-    function renderPages(pages) {
+    function renderPages(pages, forceFlat) {
       const container = document.getElementById('pages-container');
       container.innerHTML = '';
       if (pages.length === 0) {
@@ -1392,10 +1441,11 @@
       });
 
       // 按分类分组：有分类的 → 堆叠组；无分类的 → 平铺区
+      // forceFlat（收藏视图）：全部平铺，不分组
       const grouped = new Map(); // 有分类的
       const ungrouped = [];      // 无分类的
       pages.forEach(p => {
-        if (p.category) {
+        if (!forceFlat && p.category) {
           if (!grouped.has(p.category)) grouped.set(p.category, []);
           grouped.get(p.category).push(p);
         } else {
@@ -1555,7 +1605,7 @@
       const keyword = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
       toggleClearBtn();
       if (!keyword) {
-        renderPages(allPagesData);
+        renderPages(currentView === 'fav' ? allPagesData.filter(p => p.is_favorite) : allPagesData, currentView === 'fav');
         return;
       }
       const filtered = allPagesData.filter(page => {
@@ -1563,7 +1613,22 @@
         const displayName = (page.display_name || page.filename || '').toLowerCase();
         return filename.includes(keyword) || displayName.includes(keyword);
       });
-      renderPages(filtered);
+      renderPages(currentView === 'fav' ? filtered.filter(p => p.is_favorite) : filtered, currentView === 'fav');
+    }
+
+    // ============ 书签视图切换 ============
+    let currentView = 'all';
+    function switchView(view) {
+      if (currentView === view) return;
+      currentView = view;
+      document.getElementById('tab-all').classList.toggle('active', view === 'all');
+      document.getElementById('tab-fav').classList.toggle('active', view === 'fav');
+      if (view === 'fav') {
+        const favPages = allPagesData.filter(p => p.is_favorite);
+        renderPages(favPages, true);
+      } else {
+        renderPages(allPagesData);
+      }
     }
 
     async function toggleFavorite(filename, btn) {
@@ -1588,12 +1653,16 @@
               return fn.includes(keyword) || dn.includes(keyword);
             });
           }
+          // 收藏视图：只显示收藏的
+          if (currentView === 'fav') {
+            pages = pages.filter(p => p.is_favorite);
+          }
           // 收藏置顶排序
           pages.sort((a, b) => {
             if (a.is_favorite !== b.is_favorite) return a.is_favorite ? -1 : 1;
             return new Date(b.createdAt) - new Date(a.createdAt);
           });
-          renderPages(pages);
+          renderPages(pages, currentView === 'fav');
         } else {
           showToast('操作失败', 'error');
         }
