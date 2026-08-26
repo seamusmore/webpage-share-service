@@ -162,7 +162,7 @@
       margin-bottom: 10px;
       font-family: var(--card-index-font, 'Consolas', monospace);
       font-size: 10px; letter-spacing: 3px;
-      color: var(--card-index-color);
+      color: var(--stack-info-color, var(--accent));
       text-transform: uppercase;
       gap: 12px;
     }
@@ -170,12 +170,13 @@
     .stack-info .stack-expand {
       cursor: pointer;
       padding: 2px 8px;
-      border: 1px solid var(--card-index-color);
+      border: 1px solid var(--accent);
+      color: var(--accent);
       border-radius: 3px;
       transition: all 0.2s;
       user-select: none;
     }
-    .stack-info .stack-expand:hover { background: var(--card-index-color); color: var(--bg-card); }
+    .stack-info .stack-expand:hover { background: var(--accent); color: var(--bg-card); }
 
     /* 堆叠态卡片定位 */
     .stack-viewport:not(.expanded) .page-card {
@@ -976,7 +977,8 @@
     // 全局 toggleExpand 锁：{ vpId: bool } 防止动画期间重复点击
     const toggleLock = {};
     const SEC_ANIM = 400;   // 堆位移时长
-    const CARD_STAGGER = 80; // 卡片逐张间隔
+    const CARD_STAGGER = 80; // 卡片逐张间隔（每批内）
+    const CARD_BATCH = 10;   // 每批并行飞的卡片数
     const CARD_FLY = 350;    // 卡片飞行时长
 
     function renderStack(vpId) {
@@ -1089,15 +1091,27 @@
         const secDx = secFirst.left - secLast.left;
         const secDy = secFirst.top - secLast.top;
 
-        // 卡片 pin：抵消 section 位移
+        // 堆叠态下各卡相对顶层卡的层偏移（含 scale 等效结果）
+        const stackLayerOffsets = cards.map((c, i) => [
+          cardsFirst[i].left - cardsFirst[topIdx].left,
+          cardsFirst[i].top - cardsFirst[topIdx].top,
+        ]);
+
+        // 卡片 pin：用 transform（覆盖 CSS transform，因此必须包含 scale）
+        // 视觉目标 = cardsFirst（原堆叠位置，含 CSS transform 效果）
+        // 需要把 CSS transform 的 scale 加回来，否则覆盖后 scale 丢失
+        const layerScales = [1, 0.96, 0.92, 0.88, 0.84]; // 与 CSS 对应
         cards.forEach((c, i) => {
+          let depth = i - topIdx;
+          if (depth < 0) depth += n;
+          const scale = layerScales[Math.min(depth, 4)];
           const dx = cardsFirst[i].left - gridPos[i].left - secDx;
           const dy = cardsFirst[i].top - gridPos[i].top - secDy;
-          c.style.transform = `translate(${dx}px, ${dy}px)`;
+          c.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
           c.style.opacity = layerOpacity[i];
         });
 
-        // 目标：整个堆移动到顶层卡片的网格位置
+        // 目标：整个堆移动到顶层卡片的网格位置（保持堆叠态层偏移）
         const topTarget = { left: gridPos[topIdx].left, top: gridPos[topIdx].top };
 
         // section FLIP
@@ -1124,22 +1138,29 @@
           s.style.transform = '';
         });
         cards.forEach(c => c.classList.remove('no-trans'));
+        // 段1：堆整体平移——所有卡片同时从 pin 位置移到 "顶层卡网格位置 + 堆叠态层偏移"
+        // 持续 SEC_ANIM ms，期间 section/siblings 同时归位/让位
         cards.forEach((c, i) => {
-          const targetLeft = topTarget.left + (cardsFirst[i].left - cardsFirst[topIdx].left);
-          const targetTop = topTarget.top + (cardsFirst[i].top - cardsFirst[topIdx].top);
+          const targetLeft = topTarget.left + stackLayerOffsets[i][0];
+          const targetTop = topTarget.top + stackLayerOffsets[i][1];
           const dx = targetLeft - gridPos[i].left;
           const dy = targetTop - gridPos[i].top;
-          c.style.transition = `transform ${SEC_ANIM}ms cubic-bezier(0.4,0,0.2,1)`;
-          c.style.transform = `translate(${dx}px, ${dy}px)`;
+          c.style.transition = `translate ${SEC_ANIM}ms cubic-bezier(0.4,0,0.2,1)`;
+          c.style.translate = `${dx}px ${dy}px`;
         });
 
-        // 堆位移完后：卡片逐张飞到网格位置
+        // 段2：堆位移完后，卡片逐批从当前位置飞到自己 expanded 网格位置
+        // 分批并行：每批 CARD_BATCH 张同时飞，批与批之间错开 CARD_STAGGER
+        const batches = Math.ceil(n / CARD_BATCH);
         setTimeout(() => {
           cards.forEach((c, i) => {
-            const delay = ((i - topIdx + n) % n) * CARD_STAGGER;
+            const order = ((i - topIdx + n) % n);
+            const batch = Math.floor(order / CARD_BATCH);
+            const inBatch = order % CARD_BATCH;
+            const delay = batch * CARD_STAGGER + inBatch * 0; // 批内并行
             setTimeout(() => {
-              c.style.transition = `transform ${CARD_FLY}ms cubic-bezier(0.4,0,0.2,1), opacity ${CARD_FLY}ms ease`;
-              c.style.transform = '';
+              c.style.transition = `translate ${CARD_FLY}ms cubic-bezier(0.4,0,0.2,1), opacity ${CARD_FLY}ms ease`;
+              c.style.translate = '';
               c.style.opacity = '';
             }, delay);
           });
@@ -1148,7 +1169,7 @@
             siblings.forEach(s => { s.style.transition = ''; });
             cards.forEach(c => { c.style.transition = ''; });
             toggleLock[vpId] = false;
-          }, n * CARD_STAGGER + CARD_FLY + 50);
+          }, batches * CARD_STAGGER + CARD_FLY + 50);
         }, SEC_ANIM);
 
       } else {
@@ -1175,9 +1196,11 @@
         void grid.offsetWidth;
         cards.forEach(c => c.classList.remove('no-trans'));
 
-        // 段1：卡片逐张飞到顶层位置 + 层偏移
+        // 段1：卡片分批收拢到顶层位置 + 层偏移（批内并行，批间错开）
         cards.forEach((c, i) => {
-          const delay = ((topIdx - i + n) % n) * CARD_STAGGER;
+          const order = ((topIdx - i + n) % n);
+          const batch = Math.floor(order / CARD_BATCH);
+          const delay = batch * CARD_STAGGER;
           const [ox, oy] = layerOffsets[i];
           setTimeout(() => {
             if (i === topIdx) return;
@@ -1187,7 +1210,8 @@
         });
 
         // 段2：全部收拢后切布局 + 堆归位
-        const seg1End = n * CARD_STAGGER + CARD_FLY;
+        const collapseBatches = Math.ceil(n / CARD_BATCH);
+        const seg1End = collapseBatches * CARD_STAGGER + CARD_FLY;
         setTimeout(() => {
           const collapsedEndPos = cards.map(c => c.getBoundingClientRect());
           const collapsedEndOpacity = cards.map(c => getComputedStyle(c).opacity);
