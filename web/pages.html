@@ -200,7 +200,7 @@
     .stack-viewport:not(.expanded) .page-card.layer-4 { z-index: 40; transform: translateX(90px) translateY(27px) scale(0.88); opacity: 0.3; }
     .stack-viewport:not(.expanded) .page-card.layer-5 { z-index: 20; transform: translateX(120px) translateY(36px) scale(0.84); opacity: 0.15; pointer-events: none; }
     /* 超出 5 层的卡片直接隐藏 */
-    .stack-viewport:not(.expanded) .page-card.layer-hidden { opacity: 0; visibility: hidden; pointer-events: none; transition: none !important; }
+    .stack-viewport:not(.expanded) .page-card.layer-hidden { opacity: 0; pointer-events: none; }
 
     /* 展开态卡片恢复网格流 */
     .stack-viewport.expanded .page-card {
