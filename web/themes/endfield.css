@@ -125,7 +125,7 @@
   --card-index-display: block;
   --card-index-color: #a8a69c;
   --card-index-font: 'Consolas', monospace;
-  --card-tag-sep: ' · ';
+  --card-tag-sep: ·;
 
   --card-top-accent: '';
   --card-top-accent-height: 0;
