@@ -989,12 +989,15 @@
     const CARD_BATCH = 10;   // 每批并行飞的卡片数
     const CARD_FLY = 350;    // 卡片飞行时长
 
-    function renderStack(vpId) {
+    function renderStack(vpId, animate) {
       const vp = document.getElementById(vpId);
       if (!vp) return;
       const cards = vp.querySelectorAll('.page-card');
       const top = tops[vpId] || 0;
       const n = cards.length;
+
+      // toggleExpand 调用时需要 no-trans 防闪；滚轮调用时需要过渡动画
+      if (!animate) cards.forEach(c => c.classList.add('no-trans'));
 
       cards.forEach((card, i) => {
         card.classList.remove('top', 'layer-2', 'layer-3', 'layer-4', 'layer-5', 'layer-hidden');
@@ -1011,6 +1014,11 @@
           else card.classList.add('layer-hidden');
         }
       });
+
+      if (!animate) {
+        void vp.offsetWidth;
+        cards.forEach(c => c.classList.remove('no-trans'));
+      }
 
       // 更新序号显示
       const infoContainer = vp.previousElementSibling;
@@ -1029,7 +1037,7 @@
       const n = cards.length;
       if (n <= 1) return;
       tops[vpId] = ((tops[vpId] || 0) + dir + n) % n;
-      renderStack(vpId);
+      renderStack(vpId, true);
     }
 
     // 滚轮切换顶层卡（节流）
