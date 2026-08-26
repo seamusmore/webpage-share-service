@@ -141,7 +141,7 @@
       gap: var(--grid-gap, 32px);
       margin-top: 24px;
     }
-    .group-section { position: relative; }
+    .group-section { position: relative; margin-bottom: 32px; }
     .group-section.expanded-section { grid-column: 1 / -1; }
 
     /* 卡片宽高基础（与堆叠设计对齐）：实际卡宽 = 主题卡宽，由卡片自身决定 */
@@ -1398,11 +1398,11 @@
         container.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><h2>没有匹配的页面</h2><p>试试其他关键词</p></div>';
         return;
       }
-      // 按时间倒序
-      pages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-      // 收藏卡片自成一组（同时保留在分类组里）
-      const favItems = pages.filter(p => p.is_favorite);
+      // 先按收藏排序，再按时间倒序
+      pages.sort((a, b) => {
+        if (a.is_favorite !== b.is_favorite) return a.is_favorite ? -1 : 1;
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
 
       // 按分类分组：有分类的 → 堆叠组；无分类的 → 平铺区
       const grouped = new Map(); // 有分类的
@@ -1425,12 +1425,6 @@
       const timePrefix = themeText('timeP');
       const openText = themeText('open');
       const tenantId = currentUser?.tenant_id || currentUser?.open_id || 'default';
-
-      // 收藏组插到最前面（收藏卡同时保留在分类组里）
-      if (favItems.length > 0) {
-        const favLatest = Math.max(...favItems.map(p => new Date(p.createdAt).getTime()));
-        groupArr.unshift({ cat: '收藏', items: favItems, latest: favLatest });
-      }
 
       groupArr.forEach((grp, groupIdx) => {
         const vpId = 'vp-' + groupIdx;
