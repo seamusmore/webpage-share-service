@@ -988,19 +988,19 @@
     const CARD_BATCH = 10;   // 每批并行飞的卡片数
     const CARD_FLY = 350;    // 卡片飞行时长
 
-    function renderStack(vpId, animate) {
+    // renderStack：只给 toggleExpand 用，加 no-trans 防闪
+    function renderStack(vpId) {
       const vp = document.getElementById(vpId);
       if (!vp) return;
       const cards = vp.querySelectorAll('.page-card');
       const top = tops[vpId] || 0;
       const n = cards.length;
 
-      // toggleExpand 调用时需要 no-trans 防闪；滚轮调用时需要过渡动画
-      if (!animate) cards.forEach(c => c.classList.add('no-trans'));
+      cards.forEach(c => c.classList.add('no-trans'));
 
       cards.forEach((card, i) => {
         card.classList.remove('top', 'layer-2', 'layer-3', 'layer-4', 'layer-5', 'layer-hidden');
-        if (vp.classList.contains('expanded')) return; // 展开态不需要层级
+        if (vp.classList.contains('expanded')) return;
         if (i === top) {
           card.classList.add('top');
         } else {
@@ -1014,10 +1014,8 @@
         }
       });
 
-      if (!animate) {
-        void vp.offsetWidth;
-        cards.forEach(c => c.classList.remove('no-trans'));
-      }
+      void vp.offsetWidth;
+      cards.forEach(c => c.classList.remove('no-trans'));
 
       // 更新序号显示
       const infoContainer = vp.previousElementSibling;
@@ -1029,14 +1027,38 @@
       }
     }
 
-    function rotate(vpId, dir) {
+    // rotateStack：滚轮/触摸专用，不加 no-trans，CSS transition 自然过渡
+    function rotateStack(vpId, dir) {
       const vp = document.getElementById(vpId);
       if (!vp || vp.classList.contains('expanded')) return;
       const cards = vp.querySelectorAll('.page-card');
       const n = cards.length;
       if (n <= 1) return;
       tops[vpId] = ((tops[vpId] || 0) + dir + n) % n;
-      renderStack(vpId, true);
+      const top = tops[vpId];
+      const infoContainer = vp.previousElementSibling;
+
+      cards.forEach((card, i) => {
+        card.classList.remove('top', 'layer-2', 'layer-3', 'layer-4', 'layer-5', 'layer-hidden');
+        if (i === top) {
+          card.classList.add('top');
+        } else {
+          let depth = i - top;
+          if (depth < 0) depth += n;
+          if (depth === 1) card.classList.add('layer-2');
+          else if (depth === 2) card.classList.add('layer-3');
+          else if (depth === 3) card.classList.add('layer-4');
+          else if (depth === 4) card.classList.add('layer-5');
+          else card.classList.add('layer-hidden');
+        }
+      });
+
+      if (infoContainer && infoContainer.classList.contains('stack-info')) {
+        const countEl = infoContainer.querySelector('.stack-count');
+        if (countEl) {
+          countEl.innerHTML = '<span class="cur">' + (top + 1) + '</span> / ' + n;
+        }
+      }
     }
 
     // 滚轮切换顶层卡（节流）
@@ -1054,7 +1076,7 @@
         const now = Date.now();
         if (now - wheelThrottle < 220) return;
         wheelThrottle = now;
-        rotate(vpId, e.deltaY > 0 ? 1 : -1);
+        rotateStack(vpId, e.deltaY > 0 ? 1 : -1);
       }, { passive: false });
     }
 
@@ -1070,7 +1092,7 @@
       vp.addEventListener('touchend', (e) => {
         if (vp.classList.contains('expanded')) return;
         const dx = e.changedTouches[0].clientX - startX;
-        if (Math.abs(dx) > 40) rotate(vpId, dx > 0 ? -1 : 1);
+        if (Math.abs(dx) > 40) rotateStack(vpId, dx > 0 ? -1 : 1);
       }, { passive: true });
     }
 
