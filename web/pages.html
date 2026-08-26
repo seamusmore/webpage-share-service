@@ -1112,8 +1112,10 @@
           c.style.opacity = layerOpacity[i];
         });
 
-        // 目标：整个堆移动到顶层卡片的网格位置（保持堆叠态层偏移）
-        const topTarget = { left: gridPos[topIdx].left, top: gridPos[topIdx].top };
+        // 目标：整个堆移动到网格最左上角（保持堆叠态层偏移，避免溢出）
+        const gridLeft = Math.min(...gridPos.map(p => p.left));
+        const gridTop = Math.min(...gridPos.map(p => p.top));
+        const topTarget = { left: gridLeft, top: gridTop };
 
         // section FLIP
         if (secDx !== 0 || secDy !== 0) {
@@ -1181,7 +1183,9 @@
       } else {
         // ===== 收起：先在展开位置收拢，再切布局+堆归位 =====
         const gridPos = cards.map(c => c.getBoundingClientRect());
-        const target = gridPos[topIdx];
+        const gridLeft = Math.min(...gridPos.map(p => p.left));
+        const gridTop = Math.min(...gridPos.map(p => p.top));
+        const target = { left: gridLeft, top: gridTop };
 
         // 实测各卡片在堆叠态下相对顶层卡的精确偏移（含 scale）
         cards.forEach(c => c.classList.add('no-trans'));
