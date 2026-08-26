@@ -107,6 +107,8 @@
   --card-top-accent-height: 0;
   --card-top-accent-bg: transparent;
   --card-top-accent-scale: 0;
+
+  --stack-info-color: #475569;
 }
 
 body { background: var(--bg-body); }

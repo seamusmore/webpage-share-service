@@ -133,6 +133,8 @@
 
   --grid-gap: 14px;
   --card-padding: 20px 22px;
+
+  --stack-info-color: #5a584e;
 }
 
 body {

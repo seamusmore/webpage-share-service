@@ -162,21 +162,21 @@
       margin-bottom: 10px;
       font-family: var(--card-index-font, 'Consolas', monospace);
       font-size: 10px; letter-spacing: 3px;
-      color: var(--stack-info-color, var(--accent));
+      color: var(--stack-info-color, rgba(255,255,255,0.7));
       text-transform: uppercase;
       gap: 12px;
     }
-    .stack-info .stack-count .cur { color: var(--accent); font-weight: 700; }
+    .stack-info .stack-count .cur { color: rgba(255,255,255,0.95); font-weight: 700; }
     .stack-info .stack-expand {
       cursor: pointer;
       padding: 2px 8px;
-      border: 1px solid var(--accent);
-      color: var(--accent);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: rgba(255,255,255,0.7);
       border-radius: 3px;
       transition: all 0.2s;
       user-select: none;
     }
-    .stack-info .stack-expand:hover { background: var(--accent); color: var(--bg-card); }
+    .stack-info .stack-expand:hover { background: rgba(255,255,255,0.15); color: #fff; }
 
     /* 堆叠态卡片定位 */
     .stack-viewport:not(.expanded) .page-card {
@@ -228,6 +228,7 @@
     }
     .stack-viewport:not(.expanded) .page-card.top .category-tag { display: inline; }
     .stack-viewport.expanded .page-card .category-tag { display: inline; }
+    .pages-grid .page-card .category-tag { display: inline; }
     .category-tag input {
       font-size: 10px; font-family: inherit; letter-spacing: 1px;
       border: 1px solid var(--accent); border-radius: 4px;
@@ -1139,28 +1140,33 @@
         });
         cards.forEach(c => c.classList.remove('no-trans'));
         // 段1：堆整体平移——所有卡片同时从 pin 位置移到 "顶层卡网格位置 + 堆叠态层偏移"
-        // 持续 SEC_ANIM ms，期间 section/siblings 同时归位/让位
+        // 用 transform 覆盖 pin 的 transform，保持单条 transform 线
         cards.forEach((c, i) => {
           const targetLeft = topTarget.left + stackLayerOffsets[i][0];
           const targetTop = topTarget.top + stackLayerOffsets[i][1];
           const dx = targetLeft - gridPos[i].left;
           const dy = targetTop - gridPos[i].top;
-          c.style.transition = `translate ${SEC_ANIM}ms cubic-bezier(0.4,0,0.2,1)`;
-          c.style.translate = `${dx}px ${dy}px`;
+          c.style.transition = `transform ${SEC_ANIM}ms cubic-bezier(0.4,0,0.2,1)`;
+          c.style.transform = `translate(${dx}px, ${dy}px) scale(1)`;
         });
 
-        // 段2：堆位移完后，卡片逐批从当前位置飞到自己 expanded 网格位置
-        // 分批并行：每批 CARD_BATCH 张同时飞，批与批之间错开 CARD_STAGGER
-        const batches = Math.ceil(n / CARD_BATCH);
+        // 段2：堆位移完后，卡片逐张飞到自己 expanded 网格位置
+        // 只飞前 CARD_BATCH 张，超出的直接瞬移到位
+        const flyCount = Math.min(n, CARD_BATCH);
         setTimeout(() => {
           cards.forEach((c, i) => {
             const order = ((i - topIdx + n) % n);
-            const batch = Math.floor(order / CARD_BATCH);
-            const inBatch = order % CARD_BATCH;
-            const delay = batch * CARD_STAGGER + inBatch * 0; // 批内并行
+            if (order >= flyCount) {
+              // 超出限制：瞬移到位
+              c.style.transition = 'none';
+              c.style.transform = '';
+              c.style.opacity = '';
+              return;
+            }
+            const delay = order * CARD_STAGGER;
             setTimeout(() => {
-              c.style.transition = `translate ${CARD_FLY}ms cubic-bezier(0.4,0,0.2,1), opacity ${CARD_FLY}ms ease`;
-              c.style.translate = '';
+              c.style.transition = `transform ${CARD_FLY}ms cubic-bezier(0.4,0,0.2,1), opacity ${CARD_FLY}ms ease`;
+              c.style.transform = '';
               c.style.opacity = '';
             }, delay);
           });
@@ -1169,7 +1175,7 @@
             siblings.forEach(s => { s.style.transition = ''; });
             cards.forEach(c => { c.style.transition = ''; });
             toggleLock[vpId] = false;
-          }, batches * CARD_STAGGER + CARD_FLY + 50);
+          }, flyCount * CARD_STAGGER + CARD_FLY + 50);
         }, SEC_ANIM);
 
       } else {
@@ -1196,11 +1202,18 @@
         void grid.offsetWidth;
         cards.forEach(c => c.classList.remove('no-trans'));
 
-        // 段1：卡片分批收拢到顶层位置 + 层偏移（批内并行，批间错开）
+        // 段1：卡片逐张收拢到顶层位置 + 层偏移（只飞前 CARD_BATCH 张，超出的瞬移）
+        const collapseFly = Math.min(n, CARD_BATCH);
         cards.forEach((c, i) => {
           const order = ((topIdx - i + n) % n);
-          const batch = Math.floor(order / CARD_BATCH);
-          const delay = batch * CARD_STAGGER;
+          if (order >= collapseFly) {
+            // 超出限制：瞬移到收拢位置
+            const [ox, oy] = layerOffsets[i];
+            c.style.transition = 'none';
+            c.style.transform = `translate(${target.left + ox - gridPos[i].left}px, ${target.top + oy - gridPos[i].top}px)`;
+            return;
+          }
+          const delay = order * CARD_STAGGER;
           const [ox, oy] = layerOffsets[i];
           setTimeout(() => {
             if (i === topIdx) return;
@@ -1210,8 +1223,7 @@
         });
 
         // 段2：全部收拢后切布局 + 堆归位
-        const collapseBatches = Math.ceil(n / CARD_BATCH);
-        const seg1End = collapseBatches * CARD_STAGGER + CARD_FLY;
+        const seg1End = collapseFly * CARD_STAGGER + CARD_FLY;
         setTimeout(() => {
           const collapsedEndPos = cards.map(c => c.getBoundingClientRect());
           const collapsedEndOpacity = cards.map(c => getComputedStyle(c).opacity);
@@ -1344,15 +1356,19 @@
         return new Date(b.createdAt) - new Date(a.createdAt);
       });
 
-      // 按分类分组（空分类 → "+ 分类"组）
-      const groups = new Map();
+      // 按分类分组：有分类的 → 堆叠组；无分类的 → 平铺区
+      const grouped = new Map(); // 有分类的
+      const ungrouped = [];      // 无分类的
       pages.forEach(p => {
-        const cat = p.category || '+ 分类';
-        if (!groups.has(cat)) groups.set(cat, []);
-        groups.get(cat).push(p);
+        if (p.category) {
+          if (!grouped.has(p.category)) grouped.set(p.category, []);
+          grouped.get(p.category).push(p);
+        } else {
+          ungrouped.push(p);
+        }
       });
       // 分组排序：按"最近添加"——每组取最新文件的创建时间倒序
-      const groupArr = Array.from(groups.entries()).map(([cat, items]) => {
+      const groupArr = Array.from(grouped.entries()).map(([cat, items]) => {
         const latest = Math.max(...items.map(p => new Date(p.createdAt).getTime()));
         return { cat, items, latest };
       }).sort((a, b) => b.latest - a.latest);
@@ -1439,6 +1455,60 @@
         initTouch(vpId);
         initWheel(vpId);
       });
+
+      // 无分类卡片：平铺展示（用原来的 pages-grid 网格）
+      if (ungrouped.length > 0) {
+        const flatSection = document.createElement('div');
+        flatSection.className = 'group-section';
+        flatSection.style.gridColumn = '1 / -1'; // 占满整行
+
+        const flatGrid = document.createElement('div');
+        flatGrid.className = 'pages-grid';
+
+        ungrouped.forEach((page, i) => {
+          const filename = page.filename;
+          let displayName = page.display_name || filename.replace(/\.(html|htm)$/i, '');
+          displayName = displayName.replace(/^\d+-upload-/, '');
+          displayName = displayName.replace(/^\d+-/, '');
+          displayName = displayName.replace(/-/g, ' ').replace(/_/g, ' ');
+
+          const isFav = page.is_favorite;
+          const starCls = isFav ? 'star-active' : 'star-idle';
+          const starSvg = '<svg class="' + starCls + '" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+
+          const idx = String(i + 1).padStart(3, '0');
+          let cardIdx = '';
+          if (currentTheme === 'arknights') cardIdx = '// DOC_' + idx;
+          else if (currentTheme === 'endfield') cardIdx = 'DOC_' + idx;
+          else if (currentTheme === 'genshin') cardIdx = 'Doc.' + idx;
+          else if (currentTheme === 'classic') cardIdx = 'DOC.' + idx;
+          else cardIdx = 'DOC.' + idx;
+
+          const catText = '+ 分类';
+          const tagHtml = '<span class="category-tag" onclick="event.stopPropagation(); editCategory(this, \'' + filename + '\')" data-filename="' + filename + '">' + catText + '</span>';
+
+          const shareUrl = window.location.origin + '/' + tenantId + '/pages/' + encodeURIComponent(filename);
+          const createdDate = page.createdAt ? formatDate(page.createdAt, themeText('timeFmt')) : '';
+
+          const card = document.createElement('div');
+          card.className = 'page-card';
+          card.innerHTML = '<button class="favorite-btn" onclick="toggleFavorite(\'' + filename + '\', this)" title="收藏">' + starSvg + '</button>'
+            + '<div class="card-index">' + cardIdx + tagHtml + '</div>'
+            + '<h3 data-display-name="' + displayName + '">' + displayName + ' <span class="rename-icon" onclick="renamePage(\'' + filename + '\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span></h3>'
+            + '<p style="font-size: 11px; color: var(--meta-filename); margin-top: 2px; margin-bottom: 0;">' + filePrefix + filename + '</p>'
+            + (createdDate ? '<p style="font-size: 11px; color: var(--meta-time); margin-top: 1px; margin-bottom: 12px;">' + timePrefix + createdDate + '</p>' : '<p style="margin-bottom: 12px;"></p>')
+            + '<div class="actions"><a class="open-btn" href="/' + tenantId + '/pages/' + encodeURIComponent(filename) + '" target="_blank">' + openText + '</a>'
+            + '<button class="share-btn" onclick="sharePage(\'' + filename + '\', \'' + shareUrl + '\')" title="分享"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>'
+            + '<button class="download-btn" onclick="downloadPage(\'' + filename + '\')" title="下载"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>'
+            + '<button class="replace-btn" onclick="replacePage(\'' + filename + '\')" title="更新文件"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>'
+            + '<button class="delete-btn" onclick="deletePage(\'' + filename + '\')" title="删除"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div>'
+            + '<div class="corner"></div>';
+          flatGrid.appendChild(card);
+        });
+
+        flatSection.appendChild(flatGrid);
+        container.appendChild(flatSection);
+      }
     }
 
     function filterPages() {
