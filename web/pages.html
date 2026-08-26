@@ -1136,14 +1136,12 @@
           cardsFirst[i].top - cardsFirst[0].top,
         ]);
 
-        // pin：视觉保持在原堆叠位置，不删层级 class，z-index 靠 CSS 保持
-        const visibleCount = Math.min(n, 5);
+        // pin：视觉保持在原堆叠位置，opacity 用堆叠态的值（已含层级透明度）
         cards.forEach((c, i) => {
           const dx = cardsFirst[i].left - gridPos[i].left - secDx;
           const dy = cardsFirst[i].top - gridPos[i].top - secDy;
           c.style.transform = `translate(${dx}px, ${dy}px)`;
-          // 第6张+在堆里不可见
-          c.style.opacity = i < visibleCount ? layerOpacity[i] : '0';
+          c.style.opacity = layerOpacity[i];
         });
 
         // 目标：整个堆移动到第0张卡的网格位置
@@ -1182,17 +1180,24 @@
           c.style.transform = `translate(${dx}px, ${dy}px)`;
         });
 
-        // 段2：前5张逐张飞，第6张+跟第5张一起飞
+        // 段2：前5张（按 depth 从顶层开始）逐张飞，第6张+跟第5张一起飞
+        const topIdx = Math.max(0, cards.findIndex(c => c.classList.contains('top')));
+        const visibleCount = Math.min(n, 5);
         setTimeout(() => {
           cards.forEach((c, i) => {
-            if (i < visibleCount) {
-              const delay = i * CARD_STAGGER;
+            // depth = 从顶层开始数第几张（0=顶层, 1=第2层...）
+            let depth = i - topIdx;
+            if (depth < 0) depth += n;
+            if (depth < visibleCount) {
+              // 前5张：按 depth 顺序飞
+              const delay = depth * CARD_STAGGER;
               setTimeout(() => {
                 c.style.transition = `transform ${CARD_FLY}ms cubic-bezier(0.4,0,0.2,1), opacity ${CARD_FLY}ms ease`;
                 c.style.transform = '';
                 c.style.opacity = '';
               }, delay);
             } else {
+              // 第6张+：跟第5张同时飞
               const delay = (visibleCount - 1) * CARD_STAGGER;
               setTimeout(() => {
                 c.style.transition = `transform ${CARD_FLY}ms cubic-bezier(0.4,0,0.2,1), opacity ${CARD_FLY}ms ease`;
