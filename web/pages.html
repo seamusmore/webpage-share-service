@@ -1317,8 +1317,8 @@
       el.innerHTML = '';
       const input = document.createElement('input');
       input.type = 'text';
-      input.value = '';
-      input.placeholder = current || '分类名';
+      input.value = current;
+      input.placeholder = '分类名';
       el.appendChild(input);
       input.focus();
       input.select();
