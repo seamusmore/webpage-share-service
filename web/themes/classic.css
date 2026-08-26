@@ -118,9 +118,6 @@
   /* 收藏星 */
   --star-active: #f59e0b;
   --star-idle: #d1d5db;
-  --stack-info-color: #9ca3af;
-  --stack-expand-border: rgba(156,163,175,0.5);
-  --stack-label-color: #6b7280;
 
   /* 卡片文件名/时间文字色 */
   --meta-filename: #64748b;

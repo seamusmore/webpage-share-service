@@ -138,10 +138,10 @@
     .groups-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: var(--grid-gap, 32px);
+      gap: 12px;
       margin-top: 24px;
     }
-    .group-section { position: relative; margin-bottom: 32px; }
+    .group-section { position: relative; }
     .group-section.expanded-section { grid-column: 1 / -1; }
 
     /* 卡片宽高基础（与堆叠设计对齐）：实际卡宽 = 主题卡宽，由卡片自身决定 */
@@ -156,27 +156,22 @@
       gap: var(--grid-gap, 24px);
     }
 
-    /* 信息栏：序号 + 组名 + 展开按钮（在 viewport 上方）*/
+    /* 信息栏：序号 + 展开按钮（在 viewport 上方）*/
     .stack-info {
       display: flex; align-items: center;
       margin-bottom: 10px;
       font-family: var(--card-index-font, 'Consolas', monospace);
       font-size: 10px; letter-spacing: 3px;
-      color: var(--stack-info-color, var(--fg-text-muted, rgba(255,255,255,0.7)));
+      color: rgba(255,255,255,0.7);
       text-transform: uppercase;
       gap: 8px;
     }
-    .stack-info .stack-count .cur { color: var(--fg-text-strong, rgba(255,255,255,0.95)); font-weight: 700; }
-    .stack-info .stack-label {
-      color: var(--stack-label-color, var(--accent, rgba(255,255,255,0.85)));
-      font-weight: 600;
-      letter-spacing: 2px;
-    }
+    .stack-info .stack-count .cur { color: rgba(255,255,255,0.95); font-weight: 700; }
     .stack-info .stack-expand {
       cursor: pointer;
       padding: 2px 8px;
-      border: 1px solid var(--stack-expand-border, rgba(255,255,255,0.25));
-      color: var(--stack-expand-color, var(--accent, rgba(255,255,255,0.7)));
+      border: 1px solid rgba(255,255,255,0.25);
+      color: rgba(255,255,255,0.7);
       border-radius: 3px;
       transition: all 0.2s;
       user-select: none;
@@ -1440,15 +1435,11 @@
         const countSpan = document.createElement('span');
         countSpan.className = 'stack-count';
         countSpan.innerHTML = '<span class="cur">1</span> / ' + grp.items.length;
-        const groupLabel = document.createElement('span');
-        groupLabel.className = 'stack-label';
-        groupLabel.textContent = grp.cat;
         const expandBtn = document.createElement('span');
         expandBtn.className = 'stack-expand';
         expandBtn.textContent = '展开';
         expandBtn.onclick = function() { toggleExpand(vpId, this); };
         info.appendChild(countSpan);
-        info.appendChild(groupLabel);
         info.appendChild(expandBtn);
         section.appendChild(info);
 
@@ -1513,6 +1504,7 @@
         const flatSection = document.createElement('div');
         flatSection.className = 'group-section';
         flatSection.style.gridColumn = '1 / -1'; // 占满整行
+        flatSection.style.marginTop = '48px'; // 堆叠区和平铺区之间加大间距
 
         const flatGrid = document.createElement('div');
         flatGrid.className = 'pages-grid';
