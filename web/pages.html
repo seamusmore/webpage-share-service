@@ -1311,7 +1311,7 @@
     }
 
     function editCategory(el, filename) {
-      let current = el.textContent.replace(/^\s+\+分类\s*$/, '').trim();
+      let current = el.textContent.replace(/^\s*\+分类\s*$/, '').trim();
       const original = el.textContent;
       el.dataset.original = original;
       el.innerHTML = '';
