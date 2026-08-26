@@ -69,51 +69,51 @@
   --btn-search-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   --btn-search-fg: #ffffff;
 
-  /* 打开页面按钮（绿色渐变） */
-  --btn-open-bg: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  --btn-open-bg-hover: linear-gradient(135deg, #059669 0%, #047857 100%);
-  --btn-open-fg: white;
-  --btn-open-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
-  --btn-open-shadow-hover: 0 4px 12px rgba(16, 185, 129, 0.4);
+  /* 打开页面按钮（紫蓝渐变，对齐小样风格） */
+  --btn-open-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --btn-open-bg-hover: linear-gradient(135deg, #5568d3 0%, #6349a8 100%);
+  --btn-open-fg: #ffffff;
+  --btn-open-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  --btn-open-shadow-hover: 0 4px 15px rgba(102, 126, 234, 0.4);
 
-  /* 图标按钮：分享（靛）/ 下载（蓝）/ 更新（橙）/ 删除（红） */
-  --btn-icon-bg: #ffffff;
-  --btn-icon-fg: #64748b;
-  --btn-icon-border: #e5e7eb;
-  --btn-icon-radius: 8px;
+  /* 图标按钮：统一中性灰，对齐小样风格 */
+  --btn-icon-bg: #f0f0f5;
+  --btn-icon-fg: #555;
+  --btn-icon-border: transparent;
+  --btn-icon-radius: 10px;
   --icon-idle: #64748b;
 
-  --btn-share-bg: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-  --btn-share-fg: #4a78d9;
-  --btn-share-border: rgba(74, 120, 217, 0.2);
-  --btn-share-bg-hover: linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 100%);
-  --btn-share-border-hover: rgba(74, 120, 217, 0.4);
-  --btn-share-fg-hover: #4a78d9;
-  --btn-share-shadow-hover: 0 4px 12px rgba(74, 120, 217, 0.25);
+  --btn-share-bg: #f0f0f5;
+  --btn-share-fg: #555;
+  --btn-share-border: transparent;
+  --btn-share-bg-hover: #e8e8f0;
+  --btn-share-border-hover: transparent;
+  --btn-share-fg-hover: #555;
+  --btn-share-shadow-hover: none;
 
-  --btn-download-bg: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  --btn-download-fg: #3b82f6;
-  --btn-download-border: rgba(59, 130, 246, 0.2);
-  --btn-download-bg-hover: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%);
-  --btn-download-border-hover: rgba(59, 130, 246, 0.4);
-  --btn-download-fg-hover: #3b82f6;
-  --btn-download-shadow-hover: 0 4px 12px rgba(59, 130, 246, 0.25);
+  --btn-download-bg: #f0f0f5;
+  --btn-download-fg: #555;
+  --btn-download-border: transparent;
+  --btn-download-bg-hover: #e8e8f0;
+  --btn-download-border-hover: transparent;
+  --btn-download-fg-hover: #555;
+  --btn-download-shadow-hover: none;
 
-  --btn-replace-bg: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  --btn-replace-fg: #d97706;
-  --btn-replace-border: rgba(217, 119, 6, 0.2);
-  --btn-replace-bg-hover: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
-  --btn-replace-border-hover: rgba(217, 119, 6, 0.4);
-  --btn-replace-fg-hover: #d97706;
-  --btn-replace-shadow-hover: 0 4px 12px rgba(217, 119, 6, 0.25);
+  --btn-replace-bg: #f0f0f5;
+  --btn-replace-fg: #555;
+  --btn-replace-border: transparent;
+  --btn-replace-bg-hover: #e8e8f0;
+  --btn-replace-border-hover: transparent;
+  --btn-replace-fg-hover: #555;
+  --btn-replace-shadow-hover: none;
 
-  --btn-delete-bg: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-  --btn-delete-fg: #ef4444;
-  --btn-delete-border: rgba(239, 68, 68, 0.2);
-  --btn-delete-bg-hover: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
-  --btn-delete-border-hover: rgba(239, 68, 68, 0.4);
-  --btn-delete-fg-hover: #ef4444;
-  --btn-delete-shadow-hover: 0 4px 12px rgba(239, 68, 68, 0.25);
+  --btn-delete-bg: #f0f0f5;
+  --btn-delete-fg: #555;
+  --btn-delete-border: transparent;
+  --btn-delete-bg-hover: #e8e8f0;
+  --btn-delete-border-hover: transparent;
+  --btn-delete-fg-hover: #555;
+  --btn-delete-shadow-hover: none;
 
   /* 收藏星 */
   --star-active: #f59e0b;
@@ -129,10 +129,14 @@
   --card-top-accent-bg: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
   --card-top-accent-scale: 0;
 
-  --card-index-display: none;
+  --card-index-display: block;
+  --card-index-color: #999;
 }
 
 body { background: var(--bg-body); background-attachment: fixed; }
 
 /* 文件图标颜色 */
 .header h1 > svg { color: #667eea; }
+
+/* 卡片标题加粗 */
+.page-card h3 { font-weight: 700; }
