@@ -1252,10 +1252,12 @@
 
           // pin：钉回收拢末位置
           cards.forEach((c, i) => {
-            const dx = collapsedEndPos[i].left - topAbsoluteLeft;
-            const dy = collapsedEndPos[i].top - topAbsoluteTop;
+            // 隐藏卡片（display:none）rect 全零，pin 到顶层卡位置
+            const isHidden = collapsedEndPos[i].left === 0 && collapsedEndPos[i].top === 0;
+            const dx = isHidden ? 0 : collapsedEndPos[i].left - topAbsoluteLeft;
+            const dy = isHidden ? 0 : collapsedEndPos[i].top - topAbsoluteTop;
             c.style.transform = `translate(${dx}px, ${dy}px)`;
-            c.style.opacity = collapsedEndOpacity[i];
+            c.style.opacity = isHidden ? '0' : collapsedEndOpacity[i];
           });
           siblings.forEach((s, i) => {
             const dx = sibFirst[i].left - sibLast[i].left;
