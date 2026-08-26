@@ -183,7 +183,7 @@
       position: absolute;
       width: 384px;
       left: 50%;
-      margin-left: calc(-0.5 * var(--stack-card-width, 384px));
+      margin-left: calc(-0.5 * var(--stack-card-width, 384px) - 60px);
       top: 0;
       margin-top: 0; margin-bottom: 0;
     }
@@ -200,7 +200,7 @@
     .stack-viewport:not(.expanded) .page-card.layer-4 { z-index: 40; transform: translateX(90px) translateY(27px) scale(0.88); opacity: 0.3; }
     .stack-viewport:not(.expanded) .page-card.layer-5 { z-index: 20; transform: translateX(120px) translateY(36px) scale(0.84); opacity: 0.15; pointer-events: none; }
     /* 超出 5 层的卡片直接隐藏 */
-    .stack-viewport:not(.expanded) .page-card.layer-hidden { display: none; }
+    .stack-viewport:not(.expanded) .page-card.layer-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 
     /* 展开态卡片恢复网格流 */
     .stack-viewport.expanded .page-card {
@@ -1032,6 +1032,10 @@
       if (!vp) return;
       vp.addEventListener('wheel', (e) => {
         if (vp.classList.contains('expanded')) return;
+        const rect = vp.getBoundingClientRect();
+        const overCards = e.clientX >= rect.left && e.clientX <= rect.right &&
+                          e.clientY >= rect.top && e.clientY <= rect.bottom;
+        if (!overCards) return;
         e.preventDefault();
         const now = Date.now();
         if (now - wheelThrottle < 220) return;
@@ -1065,7 +1069,6 @@
       const siblings = Array.from(grid.querySelectorAll('.group-section')).filter(s => s !== section);
       const n = cards.length;
       const expanding = !vp.classList.contains('expanded');
-      const topIdx = Math.max(0, cards.findIndex(c => c.classList.contains('top')) || 0);
       toggleLock[vpId] = true;
 
       if (expanding) {
@@ -1080,7 +1083,6 @@
         section.classList.add('expanded-section');
         vp.classList.add('expanded');
         btn.textContent = '收起';
-        // 更新 stack-info 序号显示（展开态隐藏）
         const info = vp.previousElementSibling;
         if (info && info.classList.contains('stack-info')) {
           info.querySelector('.stack-count').style.opacity = '0.3';
@@ -1092,36 +1094,22 @@
         const secDx = secFirst.left - secLast.left;
         const secDy = secFirst.top - secLast.top;
 
-        // 堆叠态下各卡相对顶层卡的层偏移（含 scale 等效结果）
-        // 隐藏卡片（display:none）的 getBoundingClientRect 返回全零，偏移用 0
-        const stackLayerOffsets = cards.map((c, i) => {
-          if (cardsFirst[i].left === 0 && cardsFirst[i].top === 0) return [0, 0];
-          return [
-            cardsFirst[i].left - cardsFirst[topIdx].left,
-            cardsFirst[i].top - cardsFirst[topIdx].top,
-          ];
-        });
+        // 堆叠态各卡相对第0张的层偏移（getBoundingClientRect 已含 scale 效果）
+        const stackLayerOffsets = cards.map((c, i) => [
+          cardsFirst[i].left - cardsFirst[0].left,
+          cardsFirst[i].top - cardsFirst[0].top,
+        ]);
 
-        // 卡片 pin：用 transform（覆盖 CSS transform，因此必须包含 scale）
-        // 视觉目标 = cardsFirst（原堆叠位置，含 CSS transform 效果）
-        // 需要把 CSS transform 的 scale 加回来，否则覆盖后 scale 丢失
-        const layerScales = [1, 0.96, 0.92, 0.88, 0.84]; // 与 CSS 对应
+        // 卡片 pin：视觉保持在原堆叠位置（不加 scale，rect 已含 transform 效果）
         cards.forEach((c, i) => {
-          let depth = i - topIdx;
-          if (depth < 0) depth += n;
-          const scale = layerScales[Math.min(depth, 4)];
-          // 隐藏卡片（display:none）rect 全零，pin 到顶层卡位置
-          const isHidden = cardsFirst[i].left === 0 && cardsFirst[i].top === 0;
-          const srcLeft = isHidden ? cardsFirst[topIdx].left : cardsFirst[i].left;
-          const srcTop = isHidden ? cardsFirst[topIdx].top : cardsFirst[i].top;
-          const dx = srcLeft - gridPos[i].left - secDx;
-          const dy = srcTop - gridPos[i].top - secDy;
-          c.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
-          c.style.opacity = isHidden ? '0' : layerOpacity[i];
+          const dx = cardsFirst[i].left - gridPos[i].left - secDx;
+          const dy = cardsFirst[i].top - gridPos[i].top - secDy;
+          c.style.transform = `translate(${dx}px, ${dy}px)`;
+          c.style.opacity = layerOpacity[i];
         });
 
-        // 目标：整个堆移动到顶层卡片的网格位置（保持堆叠态层偏移）
-        const topTarget = { left: gridPos[topIdx].left, top: gridPos[topIdx].top };
+        // 目标：整个堆移动到第0张卡的网格位置（不管顶层是哪张）
+        const topTarget = { left: gridPos[0].left, top: gridPos[0].top };
 
         // section FLIP
         if (secDx !== 0 || secDy !== 0) {
@@ -1137,7 +1125,7 @@
         });
         void grid.offsetWidth;
 
-        // 同时开启动画：section 归位 + siblings 让位 + 卡片整体移到最左
+        // 同时开启动画：section 归位 + siblings 让位 + 卡片整体移到第0张网格位置
         if (secDx !== 0 || secDy !== 0) {
           section.style.transition = `transform ${SEC_ANIM}ms cubic-bezier(0.4,0,0.2,1)`;
           section.style.transform = '';
@@ -1147,87 +1135,97 @@
           s.style.transform = '';
         });
         cards.forEach(c => c.classList.remove('no-trans'));
-        // 段1：堆整体平移——所有卡片同时从 pin 位置移到 "顶层卡网格位置 + 堆叠态层偏移"
-        // 用 transform 覆盖 pin 的 transform，保持单条 transform 线
+        // 段1：堆整体平移到第0张网格位置 + 各卡层偏移
         cards.forEach((c, i) => {
           const targetLeft = topTarget.left + stackLayerOffsets[i][0];
           const targetTop = topTarget.top + stackLayerOffsets[i][1];
           const dx = targetLeft - gridPos[i].left;
           const dy = targetTop - gridPos[i].top;
           c.style.transition = `transform ${SEC_ANIM}ms cubic-bezier(0.4,0,0.2,1)`;
-          c.style.transform = `translate(${dx}px, ${dy}px) scale(1)`;
+          c.style.transform = `translate(${dx}px, ${dy}px)`;
+          // 动画期间保持堆叠层级关系（z-index 从顶层往下递减）
+          c.style.zIndex = String(100 - i);
         });
 
-        // 段2：堆位移完后，卡片逐张飞到自己 expanded 网格位置
-        // 只飞前 CARD_BATCH 张，超出的直接瞬移到位
+        // 段2：堆位移完后，卡片按 index 顺序逐张飞到网格位置
         const flyCount = Math.min(n, CARD_BATCH);
         setTimeout(() => {
           cards.forEach((c, i) => {
-            const order = ((i - topIdx + n) % n);
-            if (order >= flyCount) {
-              // 超出限制：瞬移到位
+            if (i >= flyCount) {
+              // 超出限制：先隐藏，等飞完再显示
               c.style.transition = 'none';
-              c.style.transform = '';
-              c.style.opacity = '';
+              c.style.opacity = '0';
               return;
             }
-            const delay = order * CARD_STAGGER;
+            const delay = i * CARD_STAGGER;
             setTimeout(() => {
               c.style.transition = `transform ${CARD_FLY}ms cubic-bezier(0.4,0,0.2,1), opacity ${CARD_FLY}ms ease`;
               c.style.transform = '';
               c.style.opacity = '';
+              c.style.zIndex = '';
             }, delay);
           });
+          // 飞完后显示剩余卡片 + 解锁
           setTimeout(() => {
+            cards.forEach((c, i) => {
+              if (i >= flyCount) {
+                c.style.transition = 'none';
+                c.style.transform = '';
+                c.style.opacity = '';
+                c.style.zIndex = '';
+              }
+            });
+            void grid.offsetWidth;
+            cards.forEach(c => { c.style.transition = ''; });
             section.style.transition = '';
             siblings.forEach(s => { s.style.transition = ''; });
-            cards.forEach(c => { c.style.transition = ''; });
             toggleLock[vpId] = false;
           }, flyCount * CARD_STAGGER + CARD_FLY + 50);
         }, SEC_ANIM);
 
       } else {
-        // ===== 收起：先在展开位置收拢，再切布局+堆归位 =====
+        // ===== 收起：先按 index 顺序逐张收拢到第0张位置，再切布局+堆归位 =====
         const gridPos = cards.map(c => c.getBoundingClientRect());
-        const target = gridPos[topIdx];
+        const target = gridPos[0]; // 收拢目标 = 第0张卡的网格位置
 
-        // 实测各卡片在堆叠态下相对顶层卡的精确偏移（含 scale）
+        // 实测各卡片在堆叠态下相对第0张的精确偏移（含 scale）
         cards.forEach(c => c.classList.add('no-trans'));
         vp.classList.remove('expanded');
         section.classList.remove('expanded-section');
         renderStack(vpId);
         void grid.offsetWidth;
         const stackPosRef = cards.map(c => c.getBoundingClientRect());
-        const stackTopLeft = stackPosRef[topIdx].left;
-        const stackTopTop = stackPosRef[topIdx].top;
-        const layerOffsets = stackPosRef.map((p, i) => {
-          // 隐藏卡片（display:none）rect 全零，偏移用 0
-          if (p.left === 0 && p.top === 0) return [0, 0];
-          return [p.left - stackTopLeft, p.top - stackTopTop];
-        });
+        const stackTopLeft = stackPosRef[0].left;
+        const stackTopTop = stackPosRef[0].top;
+        const layerOffsets = stackPosRef.map((p, i) => [
+          p.left - stackTopLeft,
+          p.top - stackTopTop,
+        ]);
         // 立刻切回展开态
         vp.classList.add('expanded');
         section.classList.add('expanded-section');
         void grid.offsetWidth;
         cards.forEach(c => c.classList.remove('no-trans'));
 
-        // 段1：卡片逐张收拢到顶层位置 + 层偏移（只飞前 CARD_BATCH 张，超出的瞬移）
+        // 段1：卡片按 index 顺序逐张收拢（只飞前 CARD_BATCH 张，超出的先隐藏）
         const collapseFly = Math.min(n, CARD_BATCH);
+        // 超出的卡片先隐藏
         cards.forEach((c, i) => {
-          const order = ((topIdx - i + n) % n);
-          if (order >= collapseFly) {
-            // 超出限制：瞬移到收拢位置
-            const [ox, oy] = layerOffsets[i];
+          if (i >= collapseFly) {
             c.style.transition = 'none';
-            c.style.transform = `translate(${target.left + ox - gridPos[i].left}px, ${target.top + oy - gridPos[i].top}px)`;
-            return;
+            c.style.opacity = '0';
           }
-          const delay = order * CARD_STAGGER;
+        });
+        cards.forEach((c, i) => {
+          if (i === 0) return; // 第0张不动
+          if (i >= collapseFly) return; // 已隐藏
+          const delay = i * CARD_STAGGER;
           const [ox, oy] = layerOffsets[i];
           setTimeout(() => {
-            if (i === topIdx) return;
             c.style.transition = `transform ${CARD_FLY}ms cubic-bezier(0.4,0,0.2,1), opacity ${CARD_FLY}ms ease`;
             c.style.transform = `translate(${target.left + ox - gridPos[i].left}px, ${target.top + oy - gridPos[i].top}px)`;
+            // 收拢时保持层级关系
+            c.style.zIndex = String(100 - i);
           }, delay);
         });
 
@@ -1239,7 +1237,7 @@
           const sibFirst = siblings.map(s => s.getBoundingClientRect());
 
           cards.forEach(c => c.classList.add('no-trans'));
-          cards.forEach(c => { c.style.transform = ''; });
+          cards.forEach(c => { c.style.transform = ''; c.style.zIndex = ''; });
           vp.classList.remove('expanded');
           section.classList.remove('expanded-section');
           renderStack(vpId);
@@ -1247,17 +1245,15 @@
 
           const sibLast = siblings.map(s => s.getBoundingClientRect());
           const stackPos = cards.map(c => c.getBoundingClientRect());
-          const topAbsoluteLeft = stackPos[topIdx].left;
-          const topAbsoluteTop = stackPos[topIdx].top;
+          const topAbsoluteLeft = stackPos[0].left;
+          const topAbsoluteTop = stackPos[0].top;
 
           // pin：钉回收拢末位置
           cards.forEach((c, i) => {
-            // 隐藏卡片（display:none）rect 全零，pin 到顶层卡位置
-            const isHidden = collapsedEndPos[i].left === 0 && collapsedEndPos[i].top === 0;
-            const dx = isHidden ? 0 : collapsedEndPos[i].left - topAbsoluteLeft;
-            const dy = isHidden ? 0 : collapsedEndPos[i].top - topAbsoluteTop;
+            const dx = collapsedEndPos[i].left - topAbsoluteLeft;
+            const dy = collapsedEndPos[i].top - topAbsoluteTop;
             c.style.transform = `translate(${dx}px, ${dy}px)`;
-            c.style.opacity = isHidden ? '0' : collapsedEndOpacity[i];
+            c.style.opacity = collapsedEndOpacity[i];
           });
           siblings.forEach((s, i) => {
             const dx = sibFirst[i].left - sibLast[i].left;
