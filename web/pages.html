@@ -1068,9 +1068,12 @@
       if (!vp) return;
       vp.addEventListener('wheel', (e) => {
         if (vp.classList.contains('expanded')) return;
-        const rect = vp.getBoundingClientRect();
-        const overCards = e.clientX >= rect.left && e.clientX <= rect.right &&
-                          e.clientY >= rect.top && e.clientY <= rect.bottom;
+        // 只在堆叠卡片区域响应滚轮（顶层卡 rect + 最大层偏移 120px/36px）
+        const topCard = vp.querySelector('.page-card.top');
+        if (!topCard) return;
+        const cr = topCard.getBoundingClientRect();
+        const overCards = e.clientX >= cr.left && e.clientX <= cr.right + 120 &&
+                          e.clientY >= cr.top && e.clientY <= cr.bottom + 36;
         if (!overCards) return;
         e.preventDefault();
         const now = Date.now();
