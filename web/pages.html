@@ -1328,8 +1328,6 @@
           const newVal = input.value.trim();
           if (newVal === current) {
             el.textContent = original;
-          } else if (newVal === '') {
-            el.textContent = original;
           } else {
             saveCategory(filename, input.value, el);
           }
