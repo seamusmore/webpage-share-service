@@ -1131,7 +1131,7 @@
         const secDx = secFirst.left - secLast.left;
         const secDy = secFirst.top - secLast.top;
 
-        // 堆叠态各卡相对顶层卡的层偏移（getBoundingClientRect 已含 scale 效果）
+        // 堆叠态各卡相对顶层卡(topIdx)的层偏移——保持堆形状
         const stackLayerOffsets = cards.map((c, i) => [
           cardsFirst[i].left - cardsFirst[topIdx].left,
           cardsFirst[i].top - cardsFirst[topIdx].top,
@@ -1145,7 +1145,7 @@
           c.style.opacity = layerOpacity[i];
         });
 
-        // 目标：堆顶移动到第0张卡的网格位置，堆形状靠 stackLayerOffsets 保持
+        // 目标：顶层卡移动到第0张卡的网格位置，堆形状靠 stackLayerOffsets 保持
         const topTarget = { left: gridPos[0].left, top: gridPos[0].top };
 
         // section FLIP
