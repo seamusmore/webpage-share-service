@@ -203,5 +203,5 @@ body { padding: 32px 20px; }
 /* 信息栏颜色覆盖（浅色背景） */
 .stack-info { color: #64748b; }
 .stack-info .stack-count .cur { color: #0f172a; }
-.stack-info .stack-expand { color: #64748b; border-color: rgba(100,116,139,0.4); }
-.stack-info .stack-expand:hover { background: rgba(100,116,139,0.1); color: #0f172a; }
+.stack-info .stack-expand { color: #667eea; border-color: rgba(102,126,234,0.4); }
+.stack-info .stack-expand:hover { background: rgba(102,126,234,0.1); color: #0f172a; }

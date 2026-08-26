@@ -277,3 +277,7 @@ body {
 
 /* 文件图标颜色 */
 .header h1 > svg { color: #ff6b35; }
+
+/* 展开按钮用主题色(橙) */
+.stack-info .stack-expand { color: #ff8a5c; border-color: rgba(255,107,53,0.4); }
+.stack-info .stack-expand:hover { background: rgba(255,107,53,0.15); color: #ff6b35; }
