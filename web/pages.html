@@ -1105,6 +1105,7 @@
       const siblings = Array.from(grid.querySelectorAll('.group-section')).filter(s => s !== section);
       const n = cards.length;
       const expanding = !vp.classList.contains('expanded');
+      const topIdx = Math.max(0, cards.findIndex(c => c.classList.contains('top')));
       toggleLock[vpId] = true;
 
       if (expanding) {
@@ -1130,10 +1131,10 @@
         const secDx = secFirst.left - secLast.left;
         const secDy = secFirst.top - secLast.top;
 
-        // 堆叠态各卡相对第0张的层偏移（getBoundingClientRect 已含 scale 效果）
+        // 堆叠态各卡相对顶层卡的层偏移（getBoundingClientRect 已含 scale 效果）
         const stackLayerOffsets = cards.map((c, i) => [
-          cardsFirst[i].left - cardsFirst[0].left,
-          cardsFirst[i].top - cardsFirst[0].top,
+          cardsFirst[i].left - cardsFirst[topIdx].left,
+          cardsFirst[i].top - cardsFirst[topIdx].top,
         ]);
 
         // pin：视觉保持在原堆叠位置，opacity 用堆叠态的值（已含层级透明度）
@@ -1144,8 +1145,8 @@
           c.style.opacity = layerOpacity[i];
         });
 
-        // 目标：整个堆移动到第0张卡的网格位置
-        const topTarget = { left: gridPos[0].left, top: gridPos[0].top };
+        // 目标：整个堆移动到顶层卡的网格位置
+        const topTarget = { left: gridPos[topIdx].left, top: gridPos[topIdx].top };
 
         // section FLIP
         if (secDx !== 0 || secDy !== 0) {
@@ -1181,7 +1182,6 @@
         });
 
         // 段2：前5张（按 depth 从顶层开始）逐张飞，第6张+跟第5张一起飞
-        const topIdx = Math.max(0, cards.findIndex(c => c.classList.contains('top')));
         const visibleCount = Math.min(n, 5);
         setTimeout(() => {
           cards.forEach((c, i) => {
@@ -1216,19 +1216,19 @@
         }, SEC_ANIM);
 
       } else {
-        // ===== 收起：先按 index 顺序逐张收拢到第0张位置，再切布局+堆归位 =====
+        // ===== 收起：先按 depth 顺序逐张收拢到顶层卡位置，再切布局+堆归位 =====
         const gridPos = cards.map(c => c.getBoundingClientRect());
-        const target = gridPos[0]; // 收拢目标 = 第0张卡的网格位置
+        const target = gridPos[topIdx]; // 收拢目标 = 顶层卡的网格位置
 
-        // 实测各卡片在堆叠态下相对第0张的精确偏移（含 scale）
+        // 实测各卡片在堆叠态下相对顶层卡的精确偏移（含 scale）
         cards.forEach(c => c.classList.add('no-trans'));
         vp.classList.remove('expanded');
         section.classList.remove('expanded-section');
         renderStack(vpId);
         void grid.offsetWidth;
         const stackPosRef = cards.map(c => c.getBoundingClientRect());
-        const stackTopLeft = stackPosRef[0].left;
-        const stackTopTop = stackPosRef[0].top;
+        const stackTopLeft = stackPosRef[topIdx].left;
+        const stackTopTop = stackPosRef[topIdx].top;
         const layerOffsets = stackPosRef.map((p, i) => [
           p.left - stackTopLeft,
           p.top - stackTopTop,
@@ -1239,16 +1239,18 @@
         void grid.offsetWidth;
         cards.forEach(c => c.classList.remove('no-trans'));
 
-        // 段1：收拢——第5张+后面的一起飞回来，再收第4张，…最后收第1张
+        // 段1：收拢——按 depth 反向飞，第5张+后面的一起飞回来，再收第4张…最后收顶层
         const visibleCount = Math.min(n, 5);
         cards.forEach((c, i) => {
-          if (i === 0) return; // 第0张不动
+          if (i === topIdx) return; // 顶层卡不动
+          let depth = i - topIdx;
+          if (depth < 0) depth += n;
           let delay;
-          if (i < visibleCount) {
-            // 前5张：反向飞，第4张先飞(delay=0)，第3张(delay=80)，…第1张(delay=4*80)
-            delay = (visibleCount - 1 - i) * CARD_STAGGER;
+          if (depth < visibleCount) {
+            // 前5张：反向飞，depth=4 先飞(delay=0)，depth=3(delay=80)，…depth=1(delay=4*80)
+            delay = (visibleCount - 1 - depth) * CARD_STAGGER;
           } else {
-            // 第6张及以后：跟第5张同时飞（第5张 delay=0）
+            // 第6张+：跟第5张同时飞（depth=4 delay=0）
             delay = 0;
           }
           const [ox, oy] = layerOffsets[i];
@@ -1274,8 +1276,8 @@
 
           const sibLast = siblings.map(s => s.getBoundingClientRect());
           const stackPos = cards.map(c => c.getBoundingClientRect());
-          const topAbsoluteLeft = stackPos[0].left;
-          const topAbsoluteTop = stackPos[0].top;
+          const topAbsoluteLeft = stackPos[topIdx].left;
+          const topAbsoluteTop = stackPos[topIdx].top;
 
           // pin：钉回收拢末位置
           cards.forEach((c, i) => {
