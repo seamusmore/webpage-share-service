@@ -138,7 +138,7 @@
     .groups-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: var(--grid-gap, 24px);
+      gap: var(--grid-gap, 32px);
       margin-top: 24px;
     }
     .group-section { position: relative; }
@@ -156,22 +156,27 @@
       gap: var(--grid-gap, 24px);
     }
 
-    /* 信息栏：序号 + 展开按钮（在 viewport 上方）*/
+    /* 信息栏：序号 + 组名 + 展开按钮（在 viewport 上方）*/
     .stack-info {
       display: flex; align-items: center;
       margin-bottom: 10px;
       font-family: var(--card-index-font, 'Consolas', monospace);
       font-size: 10px; letter-spacing: 3px;
-      color: var(--stack-info-color, rgba(255,255,255,0.7));
+      color: var(--stack-info-color, var(--fg-text-muted, rgba(255,255,255,0.7)));
       text-transform: uppercase;
       gap: 8px;
     }
-    .stack-info .stack-count .cur { color: rgba(255,255,255,0.95); font-weight: 700; }
+    .stack-info .stack-count .cur { color: var(--fg-text-strong, rgba(255,255,255,0.95)); font-weight: 700; }
+    .stack-info .stack-label {
+      color: var(--stack-label-color, var(--accent, rgba(255,255,255,0.85)));
+      font-weight: 600;
+      letter-spacing: 2px;
+    }
     .stack-info .stack-expand {
       cursor: pointer;
       padding: 2px 8px;
-      border: 1px solid rgba(255,255,255,0.25);
-      color: rgba(255,255,255,0.7);
+      border: 1px solid var(--stack-expand-border, rgba(255,255,255,0.25));
+      color: var(--stack-expand-color, var(--accent, rgba(255,255,255,0.7)));
       border-radius: 3px;
       transition: all 0.2s;
       user-select: none;
@@ -1393,11 +1398,11 @@
         container.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><h2>没有匹配的页面</h2><p>试试其他关键词</p></div>';
         return;
       }
-      // 先按收藏排序，再按时间倒序（沿用原有排序逻辑）
-      pages.sort((a, b) => {
-        if (a.is_favorite !== b.is_favorite) return a.is_favorite ? -1 : 1;
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      });
+      // 按时间倒序
+      pages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      // 收藏卡片自成一组（同时保留在分类组里）
+      const favItems = pages.filter(p => p.is_favorite);
 
       // 按分类分组：有分类的 → 堆叠组；无分类的 → 平铺区
       const grouped = new Map(); // 有分类的
@@ -1421,6 +1426,12 @@
       const openText = themeText('open');
       const tenantId = currentUser?.tenant_id || currentUser?.open_id || 'default';
 
+      // 收藏组插到最前面（收藏卡同时保留在分类组里）
+      if (favItems.length > 0) {
+        const favLatest = Math.max(...favItems.map(p => new Date(p.createdAt).getTime()));
+        groupArr.unshift({ cat: '收藏', items: favItems, latest: favLatest });
+      }
+
       groupArr.forEach((grp, groupIdx) => {
         const vpId = 'vp-' + groupIdx;
         tops[vpId] = 0;
@@ -1429,17 +1440,21 @@
         const section = document.createElement('div');
         section.className = 'group-section';
 
-        // 信息栏：序号 + 展开按钮
+        // 信息栏：序号 + 组名 + 展开按钮
         const info = document.createElement('div');
         info.className = 'stack-info';
         const countSpan = document.createElement('span');
         countSpan.className = 'stack-count';
         countSpan.innerHTML = '<span class="cur">1</span> / ' + grp.items.length;
+        const groupLabel = document.createElement('span');
+        groupLabel.className = 'stack-label';
+        groupLabel.textContent = grp.cat;
         const expandBtn = document.createElement('span');
         expandBtn.className = 'stack-expand';
         expandBtn.textContent = '展开';
         expandBtn.onclick = function() { toggleExpand(vpId, this); };
         info.appendChild(countSpan);
+        info.appendChild(groupLabel);
         info.appendChild(expandBtn);
         section.appendChild(info);
 

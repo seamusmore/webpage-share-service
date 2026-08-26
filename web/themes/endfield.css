@@ -119,6 +119,8 @@
 
   --star-active: #c89a3a;
   --star-idle: #c8c6bc;
+  --stack-expand-border: rgba(122,138,106,0.4);
+  --stack-label-color: #7a8a6a;
   --meta-filename: #8a8880;
   --meta-time: #b0aea4;
 

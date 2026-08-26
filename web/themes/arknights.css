@@ -117,11 +117,14 @@
 
   --star-active: #ff6b35;
   --star-idle: #444;
+  --stack-info-color: #8a8a8a;
+  --stack-expand-border: rgba(255,107,53,0.4);
+  --stack-label-color: #ff6b35;
   --meta-filename: #666;
   --meta-time: #444;
 
   --card-index-display: block;
-  --card-index-color: #555;
+  --card-index-color: #888;
   --card-index-font: 'Consolas', monospace;
 
   --card-top-accent: '';
