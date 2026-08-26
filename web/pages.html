@@ -1325,7 +1325,14 @@
 
       const finish = (ok) => {
         if (ok) {
-          saveCategory(filename, input.value, el);
+          const newVal = input.value.trim();
+          if (newVal === current) {
+            el.textContent = original;
+          } else if (newVal === '') {
+            el.textContent = original;
+          } else {
+            saveCategory(filename, input.value, el);
+          }
         } else {
           el.textContent = original;
         }
