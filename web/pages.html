@@ -996,9 +996,6 @@
       const top = tops[vpId] || 0;
       const n = cards.length;
 
-      // 加 no-trans 防止 CSS class 叹变触发 transition
-      cards.forEach(c => c.classList.add('no-trans'));
-
       cards.forEach((card, i) => {
         card.classList.remove('top', 'layer-2', 'layer-3', 'layer-4', 'layer-5', 'layer-hidden');
         if (vp.classList.contains('expanded')) return; // 展开态不需要层级
@@ -1014,10 +1011,6 @@
           else card.classList.add('layer-hidden');
         }
       });
-
-      // 强制重排后移除 no-trans，让后续动画正常
-      void vp.offsetWidth;
-      cards.forEach(c => c.classList.remove('no-trans'));
 
       // 更新序号显示
       const infoContainer = vp.previousElementSibling;
