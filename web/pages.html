@@ -1297,24 +1297,21 @@
           // 更新本地数据
           const page = allPagesData.find(p => p.filename === filename);
           if (page) page.category = data.category || null;
-          // 更新显示
-          const newText = data.category ? '· ' + data.category : '+ 分类';
-          tagEl.textContent = ' ' + newText;
-          // 重新分组渲染
+          // 重新分组渲染（会重建所有卡片，无需手动更新 tagEl）
           renderPages(allPagesData);
           showToast('分类已保存', 'success');
         } else {
           showToast('保存失败: ' + (data.error || '未知错误'), 'error');
-          tagEl.textContent = tagEl.dataset.original || ' + 分类';
+          tagEl.textContent = tagEl.dataset.original || '+分类';
         }
       } catch (e) {
         showToast('网络错误', 'error');
-        tagEl.textContent = tagEl.dataset.original || ' + 分类';
+        tagEl.textContent = tagEl.dataset.original || '+分类';
       }
     }
 
     function editCategory(el, filename) {
-      const current = el.textContent.replace(/^\s+·\s+/, '').replace(/^\s+\+\s+分类/, '').trim();
+      let current = el.textContent.replace(/^\s+\+分类\s*$/, '').trim();
       const original = el.textContent;
       el.dataset.original = original;
       el.innerHTML = '';
@@ -1327,7 +1324,7 @@
       input.select();
 
       const finish = (ok) => {
-        if (ok) {
+        if (ok && input.value.trim()) {
           saveCategory(filename, input.value, el);
         } else {
           el.textContent = original;
@@ -1427,7 +1424,7 @@
           else cardIdx = 'DOC.' + idx;
 
           // 分类标签（顶层显示；展开态全显）
-          const catText = page.category ? '· ' + page.category : '+ 分类';
+          const catText = page.category ? page.category : '+分类';
           const tagHtml = '<span class="category-tag" onclick="event.stopPropagation(); editCategory(this, \'' + filename + '\')" data-filename="' + filename + '">' + catText + '</span>';
 
           const shareUrl = window.location.origin + '/' + tenantId + '/pages/' + encodeURIComponent(filename);
@@ -1484,7 +1481,7 @@
           else if (currentTheme === 'classic') cardIdx = 'DOC.' + idx;
           else cardIdx = 'DOC.' + idx;
 
-          const catText = '+ 分类';
+          const catText = '+分类';
           const tagHtml = '<span class="category-tag" onclick="event.stopPropagation(); editCategory(this, \'' + filename + '\')" data-filename="' + filename + '">' + catText + '</span>';
 
           const shareUrl = window.location.origin + '/' + tenantId + '/pages/' + encodeURIComponent(filename);
