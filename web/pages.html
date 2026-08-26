@@ -1242,7 +1242,6 @@
         // 段1：收拢——按 depth 反向飞，第5张+后面的一起飞回来，再收第4张…最后收顶层
         const visibleCount = Math.min(n, 5);
         cards.forEach((c, i) => {
-          if (i === topIdx) return; // 顶层卡不动
           let depth = i - topIdx;
           if (depth < 0) depth += n;
           let delay;
