@@ -1123,10 +1123,6 @@
         section.classList.add('expanded-section');
         vp.classList.add('expanded');
         btn.textContent = '收起';
-        const info = vp.previousElementSibling;
-        if (info && info.classList.contains('stack-info')) {
-          info.querySelector('.stack-count').style.opacity = '0.3';
-        }
 
         const secLast = section.getBoundingClientRect();
         const sibLast = siblings.map(s => s.getBoundingClientRect());
@@ -1309,10 +1305,6 @@
             s.style.transform = '';
           });
           btn.textContent = '展开';
-          const info = vp.previousElementSibling;
-          if (info && info.classList.contains('stack-info')) {
-            info.querySelector('.stack-count').style.opacity = '';
-          }
 
           setTimeout(() => {
             siblings.forEach(s => { s.style.transition = ''; });
