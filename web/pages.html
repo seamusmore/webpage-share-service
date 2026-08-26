@@ -1463,7 +1463,7 @@
 
           // 分类标签（顶层显示；展开态全显）
           const catText = page.category ? page.category : '+分类';
-          const tagSep = (currentTheme === 'endfield' || currentTheme === 'genshin') ? ' · ' : '';
+          const tagSep = getComputedStyle(document.documentElement).getPropertyValue('--card-tag-sep') || '';
           const tagHtml = '<span class="category-tag" onclick="event.stopPropagation(); editCategory(this, \'' + filename + '\')" data-filename="' + filename + '">' + catText + '</span>';
 
           const shareUrl = window.location.origin + '/' + tenantId + '/pages/' + encodeURIComponent(filename);
@@ -1522,7 +1522,7 @@
           else cardIdx = 'DOC.' + idx;
 
           const catText = '+分类';
-          const tagSep = (currentTheme === 'endfield' || currentTheme === 'genshin') ? ' · ' : '';
+          const tagSep = getComputedStyle(document.documentElement).getPropertyValue('--card-tag-sep') || '';
           const tagHtml = '<span class="category-tag" onclick="event.stopPropagation(); editCategory(this, \'' + filename + '\')" data-filename="' + filename + '">' + catText + '</span>';
 
           const shareUrl = window.location.origin + '/' + tenantId + '/pages/' + encodeURIComponent(filename);

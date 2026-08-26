@@ -119,6 +119,7 @@
   --card-index-display: block;
   --card-index-color: #9a7d4a;
   --card-index-font: 'Palatino', serif;
+  --card-tag-sep: ' · ';
 
   --card-top-accent: '';
   --card-top-accent-height: 0;
