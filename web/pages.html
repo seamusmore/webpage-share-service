@@ -200,7 +200,7 @@
     .stack-viewport:not(.expanded) .page-card.layer-4 { z-index: 40; transform: translateX(90px) translateY(27px) scale(0.88); opacity: 0.3; }
     .stack-viewport:not(.expanded) .page-card.layer-5 { z-index: 20; transform: translateX(120px) translateY(36px) scale(0.84); opacity: 0.15; pointer-events: none; }
     /* 超出 5 层的卡片直接隐藏 */
-    .stack-viewport:not(.expanded) .page-card.layer-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .stack-viewport:not(.expanded) .page-card.layer-hidden { opacity: 0; visibility: hidden; pointer-events: none; transition: none !important; }
 
     /* 展开态卡片恢复网格流 */
     .stack-viewport.expanded .page-card {
@@ -989,6 +989,9 @@
       const top = tops[vpId] || 0;
       const n = cards.length;
 
+      // 加 no-trans 防止 CSS class 叹变触发 transition
+      cards.forEach(c => c.classList.add('no-trans'));
+
       cards.forEach((card, i) => {
         card.classList.remove('top', 'layer-2', 'layer-3', 'layer-4', 'layer-5', 'layer-hidden');
         if (vp.classList.contains('expanded')) return; // 展开态不需要层级
@@ -1004,6 +1007,10 @@
           else card.classList.add('layer-hidden');
         }
       });
+
+      // 强制重排后移除 no-trans，让后续动画正常
+      void vp.offsetWidth;
+      cards.forEach(c => c.classList.remove('no-trans'));
 
       // 更新序号显示
       const infoContainer = vp.previousElementSibling;
@@ -1143,44 +1150,38 @@
           const dy = targetTop - gridPos[i].top;
           c.style.transition = `transform ${SEC_ANIM}ms cubic-bezier(0.4,0,0.2,1)`;
           c.style.transform = `translate(${dx}px, ${dy}px)`;
-          // 动画期间保持堆叠层级关系（z-index 从顶层往下递减）
-          c.style.zIndex = String(100 - i);
         });
 
-        // 段2：堆位移完后，卡片按 index 顺序逐张飞到网格位置
-        const flyCount = Math.min(n, CARD_BATCH);
+        // 段2：堆位移完后，前5张从上到下逐张飞，第6张及以后跟第5张一起飞
+        const visibleCount = Math.min(n, 5); // 最多5张逐张飞
         setTimeout(() => {
           cards.forEach((c, i) => {
-            if (i >= flyCount) {
-              // 超出限制：先隐藏，等飞完再显示
-              c.style.transition = 'none';
-              c.style.opacity = '0';
-              return;
-            }
-            const delay = i * CARD_STAGGER;
-            setTimeout(() => {
-              c.style.transition = `transform ${CARD_FLY}ms cubic-bezier(0.4,0,0.2,1), opacity ${CARD_FLY}ms ease`;
-              c.style.transform = '';
-              c.style.opacity = '';
-              c.style.zIndex = '';
-            }, delay);
-          });
-          // 飞完后显示剩余卡片 + 解锁
-          setTimeout(() => {
-            cards.forEach((c, i) => {
-              if (i >= flyCount) {
-                c.style.transition = 'none';
+            if (i < visibleCount) {
+              // 前5张：按 depth 顺序飞（0→1→2→3→4）
+              const delay = i * CARD_STAGGER;
+              setTimeout(() => {
+                c.style.transition = `transform ${CARD_FLY}ms cubic-bezier(0.4,0,0.2,1), opacity ${CARD_FLY}ms ease`;
                 c.style.transform = '';
                 c.style.opacity = '';
-                c.style.zIndex = '';
-              }
-            });
-            void grid.offsetWidth;
-            cards.forEach(c => { c.style.transition = ''; });
+              }, delay);
+            } else {
+              // 第6张及以后：跟第5张同时飞（delay = 4*CARD_STAGGER）
+              const delay = (visibleCount - 1) * CARD_STAGGER;
+              setTimeout(() => {
+                c.style.transition = `transform ${CARD_FLY}ms cubic-bezier(0.4,0,0.2,1), opacity ${CARD_FLY}ms ease`;
+                c.style.transform = '';
+                c.style.opacity = '';
+              }, delay);
+            }
+          });
+          // 飞完解锁
+          const totalFly = (visibleCount - 1) * CARD_STAGGER + CARD_FLY;
+          setTimeout(() => {
             section.style.transition = '';
             siblings.forEach(s => { s.style.transition = ''; });
+            cards.forEach(c => { c.style.transition = ''; });
             toggleLock[vpId] = false;
-          }, flyCount * CARD_STAGGER + CARD_FLY + 50);
+          }, totalFly + 50);
         }, SEC_ANIM);
 
       } else {
@@ -1207,37 +1208,34 @@
         void grid.offsetWidth;
         cards.forEach(c => c.classList.remove('no-trans'));
 
-        // 段1：卡片按 index 顺序逐张收拢（只飞前 CARD_BATCH 张，超出的先隐藏）
-        const collapseFly = Math.min(n, CARD_BATCH);
-        // 超出的卡片先隐藏
-        cards.forEach((c, i) => {
-          if (i >= collapseFly) {
-            c.style.transition = 'none';
-            c.style.opacity = '0';
-          }
-        });
+        // 段1：收拢——第5张+后面的一起飞回来，再收第4张，…最后收第1张
+        const visibleCount = Math.min(n, 5);
         cards.forEach((c, i) => {
           if (i === 0) return; // 第0张不动
-          if (i >= collapseFly) return; // 已隐藏
-          const delay = i * CARD_STAGGER;
+          let delay;
+          if (i < visibleCount) {
+            // 前5张：反向飞，第4张先飞(delay=0)，第3张(delay=80)，…第1张(delay=4*80)
+            delay = (visibleCount - 1 - i) * CARD_STAGGER;
+          } else {
+            // 第6张及以后：跟第5张同时飞（第5张 delay=0）
+            delay = 0;
+          }
           const [ox, oy] = layerOffsets[i];
           setTimeout(() => {
             c.style.transition = `transform ${CARD_FLY}ms cubic-bezier(0.4,0,0.2,1), opacity ${CARD_FLY}ms ease`;
             c.style.transform = `translate(${target.left + ox - gridPos[i].left}px, ${target.top + oy - gridPos[i].top}px)`;
-            // 收拢时保持层级关系
-            c.style.zIndex = String(100 - i);
           }, delay);
         });
 
         // 段2：全部收拢后切布局 + 堆归位
-        const seg1End = collapseFly * CARD_STAGGER + CARD_FLY;
+        const seg1End = (visibleCount - 1) * CARD_STAGGER + CARD_FLY;
         setTimeout(() => {
           const collapsedEndPos = cards.map(c => c.getBoundingClientRect());
           const collapsedEndOpacity = cards.map(c => getComputedStyle(c).opacity);
           const sibFirst = siblings.map(s => s.getBoundingClientRect());
 
           cards.forEach(c => c.classList.add('no-trans'));
-          cards.forEach(c => { c.style.transform = ''; c.style.zIndex = ''; });
+          cards.forEach(c => { c.style.transform = ''; });
           vp.classList.remove('expanded');
           section.classList.remove('expanded-section');
           renderStack(vpId);
