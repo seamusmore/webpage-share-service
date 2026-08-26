@@ -1145,12 +1145,8 @@
           c.style.opacity = layerOpacity[i];
         });
 
-        // 目标：第0张卡飞到第0张网格位置，堆形状不变
-        // topTarget = 堆中心目标 = gridPos[0] - 第0张卡相对堆中心的偏移
-        const topTarget = {
-          left: gridPos[0].left - stackLayerOffsets[0][0],
-          top: gridPos[0].top - stackLayerOffsets[0][1],
-        };
+        // 目标：堆顶移动到第0张卡的网格位置，堆形状靠 stackLayerOffsets 保持
+        const topTarget = { left: gridPos[0].left, top: gridPos[0].top };
 
         // section FLIP
         if (secDx !== 0 || secDy !== 0) {
