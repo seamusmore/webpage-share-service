@@ -1324,7 +1324,7 @@
       input.select();
 
       const finish = (ok) => {
-        if (ok && input.value.trim()) {
+        if (ok) {
           saveCategory(filename, input.value, el);
         } else {
           el.textContent = original;
