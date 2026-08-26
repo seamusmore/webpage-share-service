@@ -189,3 +189,7 @@ body { padding: 32px 20px; }
 
 /* 文件图标颜色 */
 .header h1 > svg { color: #818cf8; }
+
+/* 展开按钮用主题色(蓝) */
+.stack-info .stack-expand { color: #818cf8; border-color: rgba(129,140,248,0.4); }
+.stack-info .stack-expand:hover { background: rgba(129,140,248,0.15); color: #a5b4fc; }
