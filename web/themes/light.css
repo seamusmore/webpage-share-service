@@ -99,8 +99,6 @@
 
   --star-active: #f59e0b;
   --star-idle: #d1d5db;
-  --stack-expand-border: rgba(102,126,234,0.4);
-  --stack-label-color: #667eea;
   --meta-filename: #64748b;
   --meta-time: #94a3b8;
 
@@ -201,3 +199,9 @@ body { padding: 32px 20px; }
 
 /* 文件图标颜色 */
 .header h1 > svg { color: #667eea; }
+
+/* 信息栏颜色覆盖（浅色背景） */
+.stack-info { color: #64748b; }
+.stack-info .stack-count .cur { color: #0f172a; }
+.stack-info .stack-expand { color: #64748b; border-color: rgba(100,116,139,0.4); }
+.stack-info .stack-expand:hover { background: rgba(100,116,139,0.1); color: #0f172a; }
