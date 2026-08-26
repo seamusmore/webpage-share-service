@@ -1093,10 +1093,14 @@
         const secDy = secFirst.top - secLast.top;
 
         // 堆叠态下各卡相对顶层卡的层偏移（含 scale 等效结果）
-        const stackLayerOffsets = cards.map((c, i) => [
-          cardsFirst[i].left - cardsFirst[topIdx].left,
-          cardsFirst[i].top - cardsFirst[topIdx].top,
-        ]);
+        // 隐藏卡片（display:none）的 getBoundingClientRect 返回全零，偏移用 0
+        const stackLayerOffsets = cards.map((c, i) => {
+          if (cardsFirst[i].left === 0 && cardsFirst[i].top === 0) return [0, 0];
+          return [
+            cardsFirst[i].left - cardsFirst[topIdx].left,
+            cardsFirst[i].top - cardsFirst[topIdx].top,
+          ];
+        });
 
         // 卡片 pin：用 transform（覆盖 CSS transform，因此必须包含 scale）
         // 视觉目标 = cardsFirst（原堆叠位置，含 CSS transform 效果）
@@ -1106,16 +1110,18 @@
           let depth = i - topIdx;
           if (depth < 0) depth += n;
           const scale = layerScales[Math.min(depth, 4)];
-          const dx = cardsFirst[i].left - gridPos[i].left - secDx;
-          const dy = cardsFirst[i].top - gridPos[i].top - secDy;
+          // 隐藏卡片（display:none）rect 全零，pin 到顶层卡位置
+          const isHidden = cardsFirst[i].left === 0 && cardsFirst[i].top === 0;
+          const srcLeft = isHidden ? cardsFirst[topIdx].left : cardsFirst[i].left;
+          const srcTop = isHidden ? cardsFirst[topIdx].top : cardsFirst[i].top;
+          const dx = srcLeft - gridPos[i].left - secDx;
+          const dy = srcTop - gridPos[i].top - secDy;
           c.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
-          c.style.opacity = layerOpacity[i];
+          c.style.opacity = isHidden ? '0' : layerOpacity[i];
         });
 
-        // 目标：整个堆移动到网格最左上角（保持堆叠态层偏移，避免溢出）
-        const gridLeft = Math.min(...gridPos.map(p => p.left));
-        const gridTop = Math.min(...gridPos.map(p => p.top));
-        const topTarget = { left: gridLeft, top: gridTop };
+        // 目标：整个堆移动到顶层卡片的网格位置（保持堆叠态层偏移）
+        const topTarget = { left: gridPos[topIdx].left, top: gridPos[topIdx].top };
 
         // section FLIP
         if (secDx !== 0 || secDy !== 0) {
@@ -1183,9 +1189,7 @@
       } else {
         // ===== 收起：先在展开位置收拢，再切布局+堆归位 =====
         const gridPos = cards.map(c => c.getBoundingClientRect());
-        const gridLeft = Math.min(...gridPos.map(p => p.left));
-        const gridTop = Math.min(...gridPos.map(p => p.top));
-        const target = { left: gridLeft, top: gridTop };
+        const target = gridPos[topIdx];
 
         // 实测各卡片在堆叠态下相对顶层卡的精确偏移（含 scale）
         cards.forEach(c => c.classList.add('no-trans'));
@@ -1196,10 +1200,11 @@
         const stackPosRef = cards.map(c => c.getBoundingClientRect());
         const stackTopLeft = stackPosRef[topIdx].left;
         const stackTopTop = stackPosRef[topIdx].top;
-        const layerOffsets = stackPosRef.map((p, i) => [
-          p.left - stackTopLeft,
-          p.top - stackTopTop,
-        ]);
+        const layerOffsets = stackPosRef.map((p, i) => {
+          // 隐藏卡片（display:none）rect 全零，偏移用 0
+          if (p.left === 0 && p.top === 0) return [0, 0];
+          return [p.left - stackTopLeft, p.top - stackTopTop];
+        });
         // 立刻切回展开态
         vp.classList.add('expanded');
         section.classList.add('expanded-section');
