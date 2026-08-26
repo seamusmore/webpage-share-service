@@ -86,33 +86,33 @@
   --btn-share-bg: #f0f0f5;
   --btn-share-fg: #555;
   --btn-share-border: transparent;
-  --btn-share-bg-hover: #e8e8f0;
+  --btn-share-bg-hover: #e0e7ff;
   --btn-share-border-hover: transparent;
-  --btn-share-fg-hover: #555;
+  --btn-share-fg-hover: #4a78d9;
   --btn-share-shadow-hover: none;
 
   --btn-download-bg: #f0f0f5;
   --btn-download-fg: #555;
   --btn-download-border: transparent;
-  --btn-download-bg-hover: #e8e8f0;
+  --btn-download-bg-hover: #dbeafe;
   --btn-download-border-hover: transparent;
-  --btn-download-fg-hover: #555;
+  --btn-download-fg-hover: #3b82f6;
   --btn-download-shadow-hover: none;
 
   --btn-replace-bg: #f0f0f5;
   --btn-replace-fg: #555;
   --btn-replace-border: transparent;
-  --btn-replace-bg-hover: #e8e8f0;
+  --btn-replace-bg-hover: #fef3c7;
   --btn-replace-border-hover: transparent;
-  --btn-replace-fg-hover: #555;
+  --btn-replace-fg-hover: #d97706;
   --btn-replace-shadow-hover: none;
 
   --btn-delete-bg: #f0f0f5;
   --btn-delete-fg: #555;
   --btn-delete-border: transparent;
-  --btn-delete-bg-hover: #e8e8f0;
+  --btn-delete-bg-hover: #fee2e2;
   --btn-delete-border-hover: transparent;
-  --btn-delete-fg-hover: #555;
+  --btn-delete-fg-hover: #ef4444;
   --btn-delete-shadow-hover: none;
 
   /* 收藏星 */
