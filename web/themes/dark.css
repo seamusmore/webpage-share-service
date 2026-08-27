@@ -29,6 +29,13 @@
   --radius-card: 14px;
   --btn-radius: 9px;
 
+  /* 堆叠透明度曲线 */
+  --stack-l1-opacity: 1;
+  --stack-l2-opacity: 0.8125;
+  --stack-l3-opacity: 0.625;
+  --stack-l4-opacity: 0.4375;
+  --stack-l5-opacity: 0.25;
+
   --badge-bg: rgba(129, 140, 248, 0.15);
   --badge-border: rgba(129, 140, 248, 0.3);
   --badge-fg: #a5b4fc;

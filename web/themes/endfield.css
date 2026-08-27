@@ -29,6 +29,13 @@
   --radius-card: 0;
   --btn-radius: 0;
 
+  /* 堆叠透明度曲线 */
+  --stack-l1-opacity: 1;
+  --stack-l2-opacity: 0.825;
+  --stack-l3-opacity: 0.65;
+  --stack-l4-opacity: 0.475;
+  --stack-l5-opacity: 0.3;
+
   --h1-letter-spacing: 2px;
   --h1-size: 26px;
   --h1-weight: 500;

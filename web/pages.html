@@ -192,13 +192,13 @@
 
     /* 层级样式（仅堆叠态生效）*/
     .stack-viewport:not(.expanded) .page-card.top {
-      z-index: 100; opacity: 1;
+      z-index: 100; opacity: var(--stack-l1-opacity, 1);
       box-shadow: 0 20px 50px rgba(0,0,0,0.25);
     }
-    .stack-viewport:not(.expanded) .page-card.layer-2 { z-index: 80; transform: translateX(30px) translateY(9px) scale(0.96); opacity: 0.75; }
-    .stack-viewport:not(.expanded) .page-card.layer-3 { z-index: 60; transform: translateX(60px) translateY(18px) scale(0.92); opacity: 0.5; }
-    .stack-viewport:not(.expanded) .page-card.layer-4 { z-index: 40; transform: translateX(90px) translateY(27px) scale(0.88); opacity: 0.3; }
-    .stack-viewport:not(.expanded) .page-card.layer-5 { z-index: 20; transform: translateX(120px) translateY(36px) scale(0.84); opacity: 0.15; pointer-events: none; }
+    .stack-viewport:not(.expanded) .page-card.layer-2 { z-index: 80; transform: translateX(30px) translateY(9px) scale(0.96); opacity: var(--stack-l2-opacity, 0.75); }
+    .stack-viewport:not(.expanded) .page-card.layer-3 { z-index: 60; transform: translateX(60px) translateY(18px) scale(0.92); opacity: var(--stack-l3-opacity, 0.5); }
+    .stack-viewport:not(.expanded) .page-card.layer-4 { z-index: 40; transform: translateX(90px) translateY(27px) scale(0.88); opacity: var(--stack-l4-opacity, 0.3); }
+    .stack-viewport:not(.expanded) .page-card.layer-5 { z-index: 20; transform: translateX(120px) translateY(36px) scale(0.84); opacity: var(--stack-l5-opacity, 0.15); pointer-events: none; }
     /* 超出 5 层的卡片直接隐藏 */
     .stack-viewport:not(.expanded) .page-card.layer-hidden { z-index: 0; transform: translateX(120px) translateY(36px) scale(0.84); opacity: 0; pointer-events: none; }
 
