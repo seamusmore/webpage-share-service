@@ -288,3 +288,21 @@ body {
 /* 展开按钮用主题色(橙) */
 .stack-info .stack-expand { color: #ff8a5c; border-color: rgba(255,107,53,0.4); }
 .stack-info .stack-expand:hover { background: rgba(255,107,53,0.15); color: #ff6b35; }
+
+/* 书签：斜切角 + 工业风 */
+.bookmark-tab {
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  border-radius: 0;
+  box-shadow: none;
+}
+.bookmark-tab:not(.active):hover {
+  background: var(--refresh-bg-hover);
+  border-color: var(--accent);
+}
+.bookmark-tab.active {
+  box-shadow: 0 0 16px rgba(255,107,53,0.35);
+}
+.bookmark-tab.active:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 0 24px rgba(255,107,53,0.5);
+}

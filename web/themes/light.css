@@ -212,3 +212,11 @@ body { padding: 32px 20px; }
 .stack-info .stack-count .cur { color: #0f172a; }
 .stack-info .stack-expand { color: #667eea; border-color: rgba(102,126,234,0.4); }
 .stack-info .stack-expand:hover { background: rgba(102,126,234,0.1); color: #0f172a; }
+
+/* 书签hover：非激活浅紫底(同refresh按钮hover色)，激活加深 */
+.bookmark-tab:not(.active):hover {
+  background: var(--refresh-bg-hover);
+}
+.bookmark-tab.active:hover {
+  background: var(--accent-hover);
+}

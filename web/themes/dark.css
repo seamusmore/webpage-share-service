@@ -200,3 +200,11 @@ body { padding: 32px 20px; }
 /* 展开按钮用主题色(蓝) */
 .stack-info .stack-expand { color: #818cf8; border-color: rgba(129,140,248,0.4); }
 .stack-info .stack-expand:hover { background: rgba(129,140,248,0.15); color: #a5b4fc; }
+
+/* 书签hover：非激活淡紫底(同refresh按钮hover色)，激活变亮 */
+.bookmark-tab:not(.active):hover {
+  background: var(--refresh-bg-hover);
+}
+.bookmark-tab.active:hover {
+  background: var(--accent-hover);
+}

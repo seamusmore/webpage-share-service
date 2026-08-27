@@ -421,3 +421,12 @@ body { padding: 32px 20px; }
 .stack-info .stack-count .cur { color: #c9a85c; }
 .stack-info .stack-expand { color: #b8975c; border-color: rgba(184,151,92,0.4); }
 .stack-info .stack-expand:hover { background: rgba(184,151,92,0.1); color: #8a6a38; }
+
+/* 书签栏：非激活与激活 hover 均沿用金棕渐变系，避免渐变切换闪烁 */
+.bookmark-tab:not(.active):hover {
+  background: var(--refresh-bg-hover);
+  color: var(--btn-primary-fg);
+}
+.bookmark-tab.active:hover {
+  background: var(--accent-hover);
+}

@@ -321,6 +321,15 @@ body { padding: 32px 20px; }
   border-color: #7a8a6a;
 }
 
+/* 书签hover：非激活浅橄榄底，边框变绿 */
+.bookmark-tab:not(.active):hover {
+  background: var(--refresh-bg-hover);
+  border-color: var(--accent);
+}
+.bookmark-tab.active:hover {
+  background: var(--accent-hover);
+}
+
 /* 信息栏颜色覆盖（浅色背景） */
 .stack-info { color: #5a584e; }
 .stack-info .stack-count .cur { color: #1a1c18; }
