@@ -231,7 +231,7 @@
       margin-left: 8px;
       font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
       color: var(--accent);
-      cursor: text;
+      cursor: pointer;
     }
     .stack-viewport:not(.expanded) .page-card.top .category-tag { display: inline; }
     .stack-viewport.expanded .page-card .category-tag { display: inline; }
@@ -1556,7 +1556,7 @@
         const flatSection = document.createElement('div');
         flatSection.className = 'group-section';
         flatSection.style.gridColumn = '1 / -1'; // 占满整行
-        flatSection.style.marginTop = '24px'; // 堆叠区和平铺区之间间距
+        flatSection.style.marginTop = '0px'; // 与grid-gap一致：header合并margin24+0=24px
 
         const flatGrid = document.createElement('div');
         flatGrid.className = 'pages-grid';
