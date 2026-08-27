@@ -1036,6 +1036,8 @@
     const tops = {};
     // 全局 toggleExpand 锁：{ vpId: bool } 防止动画期间重复点击
     const toggleLock = {};
+    // 展开态分类名集合（按分类名持久化，重建后恢复）
+    const expandedCategories = new Set();
     const SEC_ANIM = 400;   // 堆位移时长
     const CARD_STAGGER = 80; // 卡片逐张间隔（每批内）
     const CARD_BATCH = 10;   // 每批并行飞的卡片数
@@ -1176,6 +1178,8 @@
         section.classList.add('expanded-section');
         vp.classList.add('expanded');
         btn.textContent = '收起';
+        // 记录展开态（按分类名）
+        if (section.dataset.category) expandedCategories.add(section.dataset.category);
 
         const secLast = section.getBoundingClientRect();
         const sibLast = siblings.map(s => s.getBoundingClientRect());
@@ -1358,6 +1362,8 @@
             s.style.transform = '';
           });
           btn.textContent = '展开';
+          // 移除展开态记录
+          if (section.dataset.category) expandedCategories.delete(section.dataset.category);
 
           setTimeout(() => {
             siblings.forEach(s => { s.style.transition = ''; });
@@ -1477,6 +1483,7 @@
         // 分组容器
         const section = document.createElement('div');
         section.className = 'group-section';
+        section.dataset.category = grp.cat;
 
         // 信息栏：序号 + 组名 + 展开按钮
         const info = document.createElement('div');
@@ -1548,6 +1555,22 @@
         renderStack(vpId);
         initTouch(vpId);
         initWheel(vpId);
+      });
+
+      // 恢复展开态：之前展开过的分类，重建后直接切到展开（无动画）
+      container.querySelectorAll('.group-section').forEach(section => {
+        const cat = section.dataset.category;
+        if (!cat || !expandedCategories.has(cat)) return;
+        const vp = section.querySelector('.stack-viewport');
+        const btn = section.querySelector('.stack-expand');
+        if (!vp || !btn) return;
+        section.classList.add('expanded-section');
+        vp.classList.add('expanded');
+        btn.textContent = '收起';
+        // 清除堆叠层 class（展开态不需要 top/layer-N）
+        vp.querySelectorAll('.page-card').forEach(c => {
+          c.classList.remove('top', 'layer-2', 'layer-3', 'layer-4', 'layer-5', 'layer-hidden');
+        });
       });
 
       // 无分类卡片：平铺展示（用原来的 pages-grid 网格）
@@ -1846,7 +1869,45 @@
         const data = await res.json();
         if (data.success) {
           showToast('删除成功：' + filename);
-          loadPages();
+          // 从本地数据中移除
+          allPagesData = allPagesData.filter(p => p.filename !== filename);
+          // 更新页面计数
+          const countEl = document.getElementById('page-count');
+          if (countEl) countEl.textContent = formatCount(allPagesData.length);
+          // 从 DOM 中直接移除卡片，不重建整个页面（保持展开态）
+          const card = document.querySelector('.page-card .delete-btn[onclick*="' + filename + '"]')?.closest('.page-card');
+          if (card) {
+            const vp = card.closest('.stack-viewport');
+            const section = card.closest('.group-section');
+            card.remove();
+            if (vp && section) {
+              const remaining = vp.querySelectorAll('.page-card').length;
+              if (remaining === 0) {
+                // 该分类已无卡片，移除整个组并清理展开记录
+                const cat = section.dataset.category;
+                if (cat) expandedCategories.delete(cat);
+                section.remove();
+              } else {
+                // 更新序号显示
+                const vpId = vp.id;
+                const infoContainer = vp.previousElementSibling;
+                if (infoContainer && infoContainer.classList.contains('stack-info')) {
+                  const countSpan = infoContainer.querySelector('.stack-count');
+                  if (countSpan) {
+                    const top = tops[vpId] || 0;
+                    countSpan.innerHTML = '<span class="cur">' + (top + 1) + '</span> / ' + remaining;
+                  }
+                }
+                // 收拢态需要重新排列堆叠层
+                if (!vp.classList.contains('expanded')) {
+                  renderStack(vpId);
+                }
+              }
+            }
+          } else {
+            // 平铺区或未找到卡片，降级为重新加载
+            loadPages();
+          }
         } else {
           showToast('删除失败：' + data.error, 'error');
         }
