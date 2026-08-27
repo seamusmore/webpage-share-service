@@ -8,6 +8,7 @@
     /* ============ 骨架 CSS（结构性，不含颜色/装饰） ============ */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { height: 100%; }
+    html { scrollbar-gutter: stable; }
     body {
       font-family: var(--font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif);
       background: var(--bg-body);
@@ -139,7 +140,7 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
-      margin-top: 24px;
+      margin-top: 12px;
     }
     .group-section { position: relative; }
     .group-section.expanded-section { grid-column: 1 / -1; }
@@ -537,6 +538,7 @@
   </div>
   <div class="bookmark-tabs">
     <div class="bookmark-tab active" id="tab-all" onclick="switchView('all')">全部</div>
+    <div class="bookmark-tab" id="tab-cat" onclick="switchView('cat')">分类</div>
     <div class="bookmark-tab" id="tab-fav" onclick="switchView('fav')">收藏</div>
   </div>
   <div id="toast" class="toast"></div>
@@ -966,6 +968,8 @@
         if (countEl) countEl.textContent = formatCount(data.pages.length);
         if (currentView === 'fav') {
           renderPages(data.pages.filter(p => p.is_favorite), true);
+        } else if (currentView === 'all') {
+          renderPages(data.pages, true);
         } else {
           renderPages(data.pages);
         }
@@ -1434,11 +1438,8 @@
         container.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><h2>没有匹配的页面</h2><p>试试其他关键词</p></div>';
         return;
       }
-      // 先按收藏排序，再按时间倒序
-      pages.sort((a, b) => {
-        if (a.is_favorite !== b.is_favorite) return a.is_favorite ? -1 : 1;
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      });
+      // 排序：统一按时间倒序
+      pages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
       // 按分类分组：有分类的 → 堆叠组；无分类的 → 平铺区
       // forceFlat（收藏视图）：全部平铺，不分组
@@ -1462,6 +1463,12 @@
       const timePrefix = themeText('timeP');
       const openText = themeText('open');
       const tenantId = currentUser?.tenant_id || currentUser?.open_id || 'default';
+
+      // 分类视图下没有任何分类卡片时显示空状态
+      if (!forceFlat && groupArr.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">📁</div><h2>没有分类卡片</h2><p>给卡片添加分类后会在分类视图显示</p></div>';
+        return;
+      }
 
       groupArr.forEach((grp, groupIdx) => {
         const vpId = 'vp-' + groupIdx;
@@ -1544,11 +1551,12 @@
       });
 
       // 无分类卡片：平铺展示（用原来的 pages-grid 网格）
-      if (ungrouped.length > 0) {
+      // 分类视图(forceFlat=false)不显示无分类卡片
+      if (ungrouped.length > 0 && forceFlat) {
         const flatSection = document.createElement('div');
         flatSection.className = 'group-section';
         flatSection.style.gridColumn = '1 / -1'; // 占满整行
-        flatSection.style.marginTop = '48px'; // 堆叠区和平铺区之间加大间距
+        flatSection.style.marginTop = '24px'; // 堆叠区和平铺区之间间距
 
         const flatGrid = document.createElement('div');
         flatGrid.className = 'pages-grid';
@@ -1572,7 +1580,7 @@
           else if (currentTheme === 'classic') cardIdx = 'DOC.' + idx;
           else cardIdx = 'DOC.' + idx;
 
-          const catText = '+分类';
+          const catText = page.category ? page.category : '+分类';
           const _sep = getComputedStyle(document.documentElement).getPropertyValue('--card-tag-sep');
           const tagSep = _sep && _sep.trim() ? ' ·' : '';
           const tagHtml = '<span class="category-tag" onclick="event.stopPropagation(); editCategory(this, \'' + filename + '\')" data-filename="' + filename + '">' + catText + '</span>';
@@ -1604,8 +1612,11 @@
     function filterPages() {
       const keyword = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
       toggleClearBtn();
+      const forceFlat = currentView !== 'cat';
       if (!keyword) {
-        renderPages(currentView === 'fav' ? allPagesData.filter(p => p.is_favorite) : allPagesData, currentView === 'fav');
+        let pages = allPagesData;
+        if (currentView === 'fav') pages = pages.filter(p => p.is_favorite);
+        renderPages(pages, forceFlat);
         return;
       }
       const filtered = allPagesData.filter(page => {
@@ -1613,7 +1624,9 @@
         const displayName = (page.display_name || page.filename || '').toLowerCase();
         return filename.includes(keyword) || displayName.includes(keyword);
       });
-      renderPages(currentView === 'fav' ? filtered.filter(p => p.is_favorite) : filtered, currentView === 'fav');
+      let pages = filtered;
+      if (currentView === 'fav') pages = pages.filter(p => p.is_favorite);
+      renderPages(pages, forceFlat);
     }
 
     // ============ 书签视图切换 ============
@@ -1621,11 +1634,14 @@
     function switchView(view) {
       if (currentView === view) return;
       currentView = view;
+      document.getElementById('tab-cat').classList.toggle('active', view === 'cat');
       document.getElementById('tab-all').classList.toggle('active', view === 'all');
       document.getElementById('tab-fav').classList.toggle('active', view === 'fav');
       if (view === 'fav') {
         const favPages = allPagesData.filter(p => p.is_favorite);
         renderPages(favPages, true);
+      } else if (view === 'all') {
+        renderPages(allPagesData, true);
       } else {
         renderPages(allPagesData);
       }
@@ -1657,12 +1673,9 @@
           if (currentView === 'fav') {
             pages = pages.filter(p => p.is_favorite);
           }
-          // 收藏置顶排序
-          pages.sort((a, b) => {
-            if (a.is_favorite !== b.is_favorite) return a.is_favorite ? -1 : 1;
-            return new Date(b.createdAt) - new Date(a.createdAt);
-          });
-          renderPages(pages, currentView === 'fav');
+          // 排序：统一按时间倒序
+          pages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          renderPages(pages, currentView !== 'cat');
         } else {
           showToast('操作失败', 'error');
         }
@@ -1681,7 +1694,9 @@
     function clearSearch() {
       document.getElementById('search-input').value = '';
       toggleClearBtn();
-      renderPages(allPagesData);
+      let pages = allPagesData;
+      if (currentView === 'fav') pages = pages.filter(p => p.is_favorite);
+      renderPages(pages, currentView !== 'cat');
     }
 
     async function replacePage(filename) {
