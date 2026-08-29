@@ -1389,7 +1389,7 @@
           const page = allPagesData.find(p => p.filename === filename);
           if (page) page.category = data.category || null;
           // 重新分组渲染（会重建所有卡片，无需手动更新 tagEl）
-          renderPages(allPagesData);
+          renderPages(allPagesData, currentView !== 'cat');
           showToast('分类已保存', 'success');
         } else {
           showToast('保存失败: ' + (data.error || '未知错误'), 'error');
