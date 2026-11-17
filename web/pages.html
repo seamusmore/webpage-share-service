@@ -258,6 +258,9 @@
     .bookmark-tab {
       writing-mode: vertical-rl;
       text-orientation: mixed;
+      -webkit-appearance: none;
+      appearance: none;
+      margin: 0;
       padding: 16px 10px;
       font-family: var(--font-family, sans-serif);
       font-size: 13px;
@@ -283,6 +286,7 @@
       border-color: var(--accent);
       box-shadow: -6px 2px 16px rgba(0,0,0,0.2);
     }
+    .bookmark-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     /* ============ 书签标签结束 ============ */
 
     .page-card {
@@ -424,6 +428,45 @@
     .empty-state .icon { font-size: 64px; margin-bottom: 16px; }
     .empty-state h2 { color: var(--fg-text-strong); font-size: 20px; margin-bottom: 8px; }
     .empty-state p { color: var(--fg-text-muted); font-size: 14px; }
+    .empty-state .retry-btn {
+      margin-top: 16px; padding: 10px 24px;
+      background: var(--btn-primary-bg); color: var(--btn-primary-fg);
+      border: none; border-radius: var(--btn-radius, 8px);
+      font-size: 14px; font-family: inherit; cursor: pointer;
+    }
+    .empty-state .retry-btn:hover { opacity: 0.9; }
+
+    /* ============ 共享视图 ============ */
+    .shared-card { display: flex; flex-direction: column; }
+    .shared-status {
+      position: absolute; top: 12px; right: 12px;
+      padding: 2px 8px;
+      background: #B91C1C; color: #ffffff;
+      font-size: 11px; font-weight: 600; letter-spacing: 1px;
+      border-radius: 999px;
+    }
+    .shared-source { font-family: var(--font-family, sans-serif); }
+    .shared-copy-btn {
+      flex: 0 0 auto; padding: 9px 16px;
+      background: var(--btn-icon-bg); color: var(--fg-text-strong);
+      border: 1px solid var(--accent); border-radius: var(--btn-radius, 10px);
+      font-size: 14px; font-weight: 600; font-family: inherit;
+      cursor: pointer; white-space: nowrap;
+      transition: background 0.2s, border-color 0.2s, transform 0.2s;
+    }
+    .shared-copy-btn:hover:not(:disabled) { background: var(--accent-soft); border-color: var(--accent-hover); transform: translateY(-1px); }
+    .shared-copy-btn:active:not(:disabled) { transform: translateY(0); }
+    .shared-copy-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    /* 禁用态：虚线边框 + 降低存在感，同时保持文字可读（默认主题下对比度约 6:1） */
+    .shared-copy-btn:disabled {
+      background: transparent;
+      color: var(--fg-text);
+      border: 1px dashed var(--fg-text-muted);
+      cursor: not-allowed;
+      opacity: 0.72;
+      filter: none;
+    }
+    /* ============ 共享视图结束 ============ */
 
     .toast {
       position: fixed; bottom: 20px; right: 20px;
@@ -537,9 +580,10 @@
     <div id="pages-container" class="groups-grid"></div>
   </div>
   <div class="bookmark-tabs">
-    <div class="bookmark-tab active" id="tab-all" onclick="switchView('all')">全部</div>
-    <div class="bookmark-tab" id="tab-cat" onclick="switchView('cat')">分类</div>
-    <div class="bookmark-tab" id="tab-fav" onclick="switchView('fav')">收藏</div>
+    <button type="button" class="bookmark-tab active" id="tab-all" aria-pressed="true" onclick="switchView('all')">全部</button>
+    <button type="button" class="bookmark-tab" id="tab-cat" aria-pressed="false" onclick="switchView('cat')">分类</button>
+    <button type="button" class="bookmark-tab" id="tab-fav" aria-pressed="false" onclick="switchView('fav')">收藏</button>
+    <button type="button" class="bookmark-tab" id="tab-share" aria-pressed="false" onclick="switchView('shared')">共享</button>
   </div>
   <div id="toast" class="toast"></div>
 
@@ -579,6 +623,8 @@
     let currentUser = null;
     let currentApiKey = null;
     let allPagesData = [];
+    let sharedData = [];
+    let sharedLoadingSeq = 0;
     let currentTheme = 'classic';
 
     // ============ 主题管理 ============
@@ -941,6 +987,11 @@
     }
     
     async function refreshPages() {
+      if (currentView === 'shared') {
+        await loadShared();
+        showToast('共享列表已刷新');
+        return;
+      }
       await loadPages();
       // loadPages 会重置渲染，若搜索框有关键词则重新过滤
       const keyword = (document.getElementById('search-input')?.value || '').trim();
@@ -961,11 +1012,14 @@
         if (!data.success || data.pages.length === 0) {
           allPagesData = [];
           if (countEl) countEl.textContent = formatCount(0);
+          // 共享视图下只刷新本人数据，不覆盖共享列表
+          if (currentView === 'shared') { renderShared(); return; }
           container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><h2>还没有页面</h2><p>上传 HTML 文件后这里会显示列表</p></div>';
           return;
         }
         allPagesData = data.pages;
         if (countEl) countEl.textContent = formatCount(data.pages.length);
+        if (currentView === 'shared') { renderShared(); return; }
         if (currentView === 'fav') {
           renderPages(data.pages.filter(p => p.is_favorite), true);
         } else if (currentView === 'all') {
@@ -974,6 +1028,10 @@
           renderPages(data.pages);
         }
       } catch (err) {
+        if (currentView === 'shared') {
+          showToast('本人列表刷新失败：' + err.message, 'error');
+          return;
+        }
         document.getElementById('pages-container').innerHTML = '<div class="empty-state"><div class="icon">❌</div><h2>加载失败</h2><p>' + err.message + '</p></div>';
       }
     }
@@ -1635,6 +1693,7 @@
     function filterPages() {
       const keyword = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
       toggleClearBtn();
+      if (currentView === 'shared') { renderShared(); return; }
       const forceFlat = currentView !== 'cat';
       if (!keyword) {
         let pages = allPagesData;
@@ -1652,14 +1711,250 @@
       renderPages(pages, forceFlat);
     }
 
+    // ============ 共享视图 ============
+    function updatePageCount(n, title) {
+      const countEl = document.getElementById('page-count');
+      if (!countEl) return;
+      countEl.textContent = formatCount(n || 0);
+      if (title) countEl.title = title;
+    }
+
+    // SQLite CURRENT_TIMESTAMP 为 UTC 的 'YYYY-MM-DD HH:MM:SS'，显式补 Z 避免按本地时间解析偏移
+    function parseShareTime(value) {
+      if (!value) return null;
+      if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}$/.test(value)) {
+        return new Date(value.replace(' ', 'T') + 'Z');
+      }
+      const dt = new Date(value);
+      return isNaN(dt.getTime()) ? null : dt;
+    }
+
+    function sharedCardIndex(i) {
+      const idx = String(i + 1).padStart(3, '0');
+      if (currentTheme === 'arknights') return '// DOC_' + idx;
+      if (currentTheme === 'endfield') return 'DOC_' + idx;
+      if (currentTheme === 'genshin') return 'Doc.' + idx;
+      return 'DOC.' + idx;
+    }
+
+    function renderSharedLoading() {
+      const container = document.getElementById('pages-container');
+      if (!container) return;
+      container.innerHTML = '<div class="empty-state"><div class="icon">⏳</div><h2>正在加载共享列表…</h2><p>请稍候</p></div>';
+    }
+
+    function renderSharedError(message) {
+      const container = document.getElementById('pages-container');
+      if (!container) return;
+      const empty = document.createElement('div');
+      empty.className = 'empty-state';
+      const icon = document.createElement('div');
+      icon.className = 'icon';
+      icon.textContent = '⚠️';
+      const title = document.createElement('h2');
+      title.textContent = '共享列表加载失败';
+      const desc = document.createElement('p');
+      desc.textContent = message || '请稍后重试';
+      const retry = document.createElement('button');
+      retry.type = 'button';
+      retry.className = 'retry-btn';
+      retry.textContent = '重试';
+      retry.addEventListener('click', loadShared);
+      empty.appendChild(icon);
+      empty.appendChild(title);
+      empty.appendChild(desc);
+      empty.appendChild(retry);
+      container.innerHTML = '';
+      container.appendChild(empty);
+    }
+
+    async function loadShared() {
+      const seq = ++sharedLoadingSeq;
+      renderSharedLoading();
+      try {
+        const res = await fetch('/api/shared', {
+          headers: { 'X-API-Key': currentApiKey || '' }
+        });
+        let data = {};
+        try { data = await res.json(); } catch (e) { /* 非 JSON 响应按失败处理 */ }
+        if (seq !== sharedLoadingSeq || currentView !== 'shared') return;
+        if (!res.ok || !data.success || !Array.isArray(data.shares)) {
+          throw new Error(data.error || ('加载共享列表失败（HTTP ' + res.status + '）'));
+        }
+        sharedData = data.shares;
+        renderShared();
+      } catch (err) {
+        if (seq !== sharedLoadingSeq || currentView !== 'shared') return;
+        renderSharedError(err.message);
+      }
+    }
+
+    function renderShared() {
+      const container = document.getElementById('pages-container');
+      if (!container) return;
+      updatePageCount(sharedData.length, '共享页面数量');
+      const keyword = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
+      const shares = keyword ? sharedData.filter((share) => {
+        const displayName = (share.display_name || '').toLowerCase();
+        const filename = (share.filename || '').toLowerCase();
+        const sourceName = (share.source_name || '').toLowerCase();
+        return displayName.includes(keyword) || filename.includes(keyword) || sourceName.includes(keyword);
+      }) : sharedData;
+
+      container.innerHTML = '';
+      if (shares.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        const icon = document.createElement('div');
+        icon.className = 'icon';
+        icon.textContent = keyword ? '🔍' : '🔗';
+        const title = document.createElement('h2');
+        title.textContent = keyword ? '没有匹配的共享页面' : '还没有共享页面';
+        const desc = document.createElement('p');
+        desc.textContent = keyword ? '试试其他关键词' : '他人分享的网页在本人登录态下打开后，会自动出现在这里';
+        empty.appendChild(icon);
+        empty.appendChild(title);
+        empty.appendChild(desc);
+        container.appendChild(empty);
+        return;
+      }
+
+      const section = document.createElement('div');
+      section.className = 'group-section';
+      section.style.gridColumn = '1 / -1';
+      section.style.marginTop = '0px';
+      const grid = document.createElement('div');
+      grid.className = 'pages-grid';
+      shares.forEach((share, i) => grid.appendChild(buildSharedCard(share, i)));
+      section.appendChild(grid);
+      container.appendChild(section);
+    }
+
+    function buildSharedCard(share, index) {
+      const sourceTenantId = share.source_tenant_id || '';
+      const filename = share.filename || '';
+      const exists = share.source_exists === true;
+      // 来源显示名缺失时按本人卡片的规则去掉时间戳前缀，避免展示原始存储文件名
+      const displayName = share.display_name
+        || filename.replace(/\.(html|htm)$/i, '').replace(/^\d+-upload-/, '').replace(/^\d+-/, '')
+        || '未命名页面';
+
+      const card = document.createElement('div');
+      card.className = 'page-card shared-card';
+
+      const indexEl = document.createElement('div');
+      indexEl.className = 'card-index';
+      indexEl.textContent = sharedCardIndex(index);
+      card.appendChild(indexEl);
+
+      if (!exists) {
+        const badge = document.createElement('span');
+        badge.className = 'shared-status';
+        badge.textContent = '已失效';
+        badge.title = '来源页面已被删除或来源用户不可用';
+        card.appendChild(badge);
+      }
+
+      const title = document.createElement('h3');
+      title.textContent = displayName;
+      title.title = displayName;
+      card.appendChild(title);
+
+      const fileEl = document.createElement('p');
+      fileEl.style.cssText = 'font-size:11px; color: var(--meta-filename); margin-top:2px; margin-bottom:0;';
+      fileEl.textContent = themeText('fileP') + filename;
+      card.appendChild(fileEl);
+
+      const sourceEl = document.createElement('p');
+      sourceEl.className = 'shared-source';
+      sourceEl.style.cssText = 'font-size:11px; color: var(--meta-filename); margin-top:1px; margin-bottom:0;';
+      sourceEl.textContent = '👤 来源：' + (share.source_name || '未知用户');
+      card.appendChild(sourceEl);
+
+      const createdDate = formatDate(parseShareTime(share.created_at), themeText('timeFmt'));
+      if (createdDate) {
+        const timeEl = document.createElement('p');
+        timeEl.style.cssText = 'font-size:11px; color: var(--meta-time); margin-top:1px; margin-bottom:12px;';
+        timeEl.textContent = themeText('timeP') + createdDate;
+        card.appendChild(timeEl);
+      } else {
+        const spacer = document.createElement('p');
+        spacer.style.marginBottom = '12px';
+        card.appendChild(spacer);
+      }
+
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+
+      const openLink = document.createElement('a');
+      openLink.className = 'open-btn';
+      openLink.href = '/' + encodeURIComponent(sourceTenantId) + '/pages/' + encodeURIComponent(filename);
+      openLink.target = '_blank';
+      openLink.rel = 'noopener';
+      openLink.textContent = themeText('open');
+      actions.appendChild(openLink);
+
+      const copyBtn = document.createElement('button');
+      copyBtn.type = 'button';
+      copyBtn.className = 'shared-copy-btn';
+      copyBtn.textContent = '保存副本';
+      copyBtn.disabled = !exists;
+      copyBtn.title = exists ? '把该网页保存为本人名下的副本' : '来源页面已失效，无法保存副本';
+      copyBtn.addEventListener('click', () => saveSharedCopy(copyBtn, sourceTenantId, filename));
+      actions.appendChild(copyBtn);
+
+      card.appendChild(actions);
+      return card;
+    }
+
+    async function saveSharedCopy(btn, sourceTenantId, filename) {
+      if (btn.disabled) return;
+      if (!currentApiKey) {
+        showToast('登录信息未就绪，请刷新后重试', 'error');
+        return;
+      }
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = '保存中…';
+      try {
+        const res = await fetch('/api/shared/copy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-API-Key': currentApiKey },
+          body: JSON.stringify({ source_tenant_id: sourceTenantId, filename: filename })
+        });
+        let data = {};
+        try { data = await res.json(); } catch (e) { /* 非 JSON 响应按失败处理 */ }
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || ('保存副本失败（HTTP ' + res.status + '）'));
+        }
+        showToast('副本已保存：' + (data.filename || filename), 'success');
+        // 刷新本人全部列表；loadPages 在共享视图下不会覆盖当前列表
+        await loadPages();
+      } catch (err) {
+        showToast('保存副本失败：' + (err.message || '网络异常'), 'error');
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    }
+    // ============ 共享视图结束 ============
+
     // ============ 书签视图切换 ============
     let currentView = 'all';
     function switchView(view) {
       if (currentView === view) return;
       currentView = view;
-      document.getElementById('tab-cat').classList.toggle('active', view === 'cat');
-      document.getElementById('tab-all').classList.toggle('active', view === 'all');
-      document.getElementById('tab-fav').classList.toggle('active', view === 'fav');
+      const tabMap = { all: 'tab-all', cat: 'tab-cat', fav: 'tab-fav', shared: 'tab-share' };
+      Object.keys(tabMap).forEach((v) => {
+        const tab = document.getElementById(tabMap[v]);
+        if (!tab) return;
+        tab.classList.toggle('active', v === view);
+        tab.setAttribute('aria-pressed', v === view ? 'true' : 'false');
+      });
+      if (view === 'shared') {
+        loadShared();
+        return;
+      }
+      updatePageCount(allPagesData.length, '文件总数');
       if (view === 'fav') {
         const favPages = allPagesData.filter(p => p.is_favorite);
         renderPages(favPages, true);
@@ -1668,6 +1963,9 @@
       } else {
         renderPages(allPagesData);
       }
+      // 保持搜索状态：切换视图后按当前关键词重新过滤
+      const keyword = (document.getElementById('search-input')?.value || '').trim();
+      if (keyword) filterPages();
     }
 
     async function toggleFavorite(filename, btn) {
@@ -1717,6 +2015,7 @@
     function clearSearch() {
       document.getElementById('search-input').value = '';
       toggleClearBtn();
+      if (currentView === 'shared') { renderShared(); return; }
       let pages = allPagesData;
       if (currentView === 'fav') pages = pages.filter(p => p.is_favorite);
       renderPages(pages, currentView !== 'cat');
