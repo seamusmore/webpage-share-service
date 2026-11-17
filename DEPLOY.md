@@ -152,6 +152,24 @@ sudo systemctl status webpage-share
 
 ---
 
+## 6. 更新部署（服务器直接拉取最新 master）
+
+生产服务器为源码直接运行（systemd），更新部署 = 在服务根目录拉取最新 master 分支并重启：
+
+```bash
+cd /mnt/service/webpage-share-service
+git pull origin master
+systemctl restart webpage-share
+```
+
+- 前置条件：更新提交已推送到远端 `origin`（github.com/seamusmore/webpage-share-service）
+- 更新范围：`services/`、`web/`、`scripts/` 及文档；`.env`、`data/`、`storage/`、`logs/`、`node_modules/` 均不进 Git，pull 不影响租户数据与运行配置
+- 若更新涉及 `package.json` 依赖变化，pull 后先 `npm install` 再重启
+- 更新后验证：`systemctl is-active webpage-share`（active）+ `curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:9080/`（200）
+- 回滚：`git checkout <上一版本提交> && systemctl restart webpage-share`
+
+---
+
 ## 故障排查
 
 | 问题 | 解决 |
