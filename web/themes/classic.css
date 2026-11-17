@@ -123,6 +123,10 @@
   --meta-filename: #64748b;
   --meta-time: #9ca3af;
 
+  /* 失效/危险状态 */
+  --danger-bg: #B91C1C;
+  --danger-fg: #ffffff;
+
   /* 卡片顶部装饰条 */
   --card-top-accent: '';
   --card-top-accent-height: 4px;

@@ -129,6 +129,10 @@
   --meta-filename: #8a8880;
   --meta-time: #b0aea4;
 
+  /* 失效/危险状态 */
+  --danger-bg: #B91C1C;
+  --danger-fg: #ffffff;
+
   --card-index-display: block;
   --card-index-color: #a8a69c;
   --card-index-font: 'Consolas', monospace;

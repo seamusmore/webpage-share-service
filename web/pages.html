@@ -425,7 +425,9 @@
       border: 1px solid var(--border-card);
       grid-column: 1 / -1;
     }
-    .empty-state .icon { font-size: 64px; margin-bottom: 16px; }
+    .empty-state .icon { font-size: 64px; margin-bottom: 16px; color: var(--fg-text-muted); }
+    /* 共享视图状态图标为 SVG 线条，尺寸与颜色由主题变量控制 */
+    .empty-state .icon svg { display: block; width: 56px; height: 56px; margin: 0 auto; }
     .empty-state h2 { color: var(--fg-text-strong); font-size: 20px; margin-bottom: 8px; }
     .empty-state p { color: var(--fg-text-muted); font-size: 14px; }
     .empty-state .retry-btn {
@@ -441,11 +443,12 @@
     .shared-status {
       position: absolute; top: 12px; right: 12px;
       padding: 2px 8px;
-      background: #B91C1C; color: #ffffff;
+      background: var(--danger-bg, #B91C1C); color: var(--danger-fg, #ffffff);
       font-size: 11px; font-weight: 600; letter-spacing: 1px;
       border-radius: 999px;
     }
     .shared-source { font-family: var(--font-family, sans-serif); }
+    .shared-source svg { vertical-align: -2px; }
     .shared-copy-btn {
       flex: 0 0 auto; padding: 9px 16px;
       background: var(--btn-icon-bg); color: var(--fg-text-strong);
@@ -1737,10 +1740,23 @@
       return 'DOC.' + idx;
     }
 
+    // 共享视图状态图标（Feather 线条，stroke 继承主题颜色变量）
+    const SHARED_ICONS = {
+      clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+      alert: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
+      search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+      link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+      user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'
+    };
+
+    function sharedIcon(name, size) {
+      return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' + SHARED_ICONS[name] + '</svg>';
+    }
+
     function renderSharedLoading() {
       const container = document.getElementById('pages-container');
       if (!container) return;
-      container.innerHTML = '<div class="empty-state"><div class="icon">⏳</div><h2>正在加载共享列表…</h2><p>请稍候</p></div>';
+      container.innerHTML = '<div class="empty-state"><div class="icon">' + sharedIcon('clock', 56) + '</div><h2>正在加载共享列表…</h2><p>请稍候</p></div>';
     }
 
     function renderSharedError(message) {
@@ -1750,7 +1766,7 @@
       empty.className = 'empty-state';
       const icon = document.createElement('div');
       icon.className = 'icon';
-      icon.textContent = '⚠️';
+      icon.innerHTML = sharedIcon('alert', 56);
       const title = document.createElement('h2');
       title.textContent = '共享列表加载失败';
       const desc = document.createElement('p');
@@ -1809,7 +1825,7 @@
         empty.className = 'empty-state';
         const icon = document.createElement('div');
         icon.className = 'icon';
-        icon.textContent = keyword ? '🔍' : '🔗';
+        icon.innerHTML = sharedIcon(keyword ? 'search' : 'link', 56);
         const title = document.createElement('h2');
         title.textContent = keyword ? '没有匹配的共享页面' : '还没有共享页面';
         const desc = document.createElement('p');
@@ -1870,7 +1886,8 @@
       const sourceEl = document.createElement('p');
       sourceEl.className = 'shared-source';
       sourceEl.style.cssText = 'font-size:11px; color: var(--meta-filename); margin-top:1px; margin-bottom:0;';
-      sourceEl.textContent = '👤 来源：' + (share.source_name || '未知用户');
+      sourceEl.innerHTML = sharedIcon('user', 14);
+      sourceEl.appendChild(document.createTextNode(' 来源：' + (share.source_name || '未知用户')));
       card.appendChild(sourceEl);
 
       const createdDate = formatDate(parseShareTime(share.created_at), themeText('timeFmt'));

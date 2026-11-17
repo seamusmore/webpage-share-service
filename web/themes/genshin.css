@@ -116,6 +116,10 @@
   --meta-filename: #8a7a58;
   --meta-time: #b0a078;
 
+  /* 失效/危险状态 */
+  --danger-bg: #B91C1C;
+  --danger-fg: #ffffff;
+
   --card-index-display: block;
   --card-index-color: #9a7d4a;
   --card-index-font: 'Palatino', serif;
