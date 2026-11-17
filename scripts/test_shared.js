@@ -108,6 +108,24 @@ async function waitReady(timeoutMs = 15000) {
   return false;
 }
 
+// 等服务端异步建表完成（server.listen 早于建表回调，直接 INSERT 可能撞「no such table」）
+async function waitForTable(tableName, timeoutMs = 10000) {
+  const sqlite3 = require('sqlite3').verbose();
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const exists = await new Promise((resolve) => {
+      const db = new sqlite3.Database(DB_PATH, (err) => { if (err) return resolve(false); });
+      db.get('SELECT name FROM sqlite_master WHERE type = ? AND name = ?', ['table', tableName], (err, row) => {
+        db.close();
+        resolve(!!row);
+      });
+    });
+    if (exists) return true;
+    await new Promise((r) => setTimeout(r, 100));
+  }
+  return false;
+}
+
 async function main() {
   // 清空测试数据，保证幂等重跑
   fs.rmSync(TEST_BASE, { recursive: true, force: true });
@@ -143,6 +161,13 @@ async function main() {
     process.exit(1);
   }
   console.log('✅ 服务已就绪\n');
+
+  // 等服务端建表完成，避免 INSERT 撞「no such table」
+  if (!(await waitForTable('tenants'))) {
+    console.error('❌ 等待 tenants 表创建超时');
+    child.kill();
+    process.exit(1);
+  }
 
   // 1. 准备两个租户（直接写入隔离测试库）
   await dbRun('INSERT OR REPLACE INTO tenants (tenant_id, api_key, storage_path, name) VALUES (?, ?, ?, ?)',

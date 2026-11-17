@@ -323,6 +323,18 @@ function readHtml(filename) {
   return null;
 }
 
+// 解析租户存储内的文件绝对路径，防路径穿越；越界返回 null。
+// path.resolve 会归一化 ../ 与 ..\（Windows 反斜杠），startsWith(root + sep) 白名单同时拦截两种分隔符变体。
+function resolveStorageFile(storagePath, filename) {
+  if (!filename || typeof filename !== 'string') return null;
+  const root = path.resolve(storagePath);
+  const target = path.resolve(storagePath, filename);
+  if (target !== root && !target.startsWith(root + path.sep)) {
+    return null; // 穿越 storage_path 之外
+  }
+  return target;
+}
+
 // 设置安全响应头
 function setSecurityHeaders(res) {
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
@@ -677,8 +689,8 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      const targetPath = path.join(tenant.storage_path, targetFilename);
-      if (!fs.existsSync(targetPath)) {
+      const targetPath = resolveStorageFile(tenant.storage_path, targetFilename);
+      if (!targetPath || !fs.existsSync(targetPath)) {
         res.writeHead(404, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: '文件不存在: ' + targetFilename }));
         return;
@@ -1042,9 +1054,9 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       
-      const filePath = path.join(tenant.storage_path, filename);
+      const filePath = resolveStorageFile(tenant.storage_path, filename);
       
-      if (!fs.existsSync(filePath)) {
+      if (!filePath || !fs.existsSync(filePath)) {
         res.writeHead(404, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'File not found' }));
         return;
@@ -1099,16 +1111,16 @@ const server = http.createServer(async (req, res) => {
             return;
           }
           
-          const oldPath = path.join(tenant.storage_path, old_filename);
-          const newPath = path.join(tenant.storage_path, new_filename);
+          const oldPath = resolveStorageFile(tenant.storage_path, old_filename);
+          const newPath = resolveStorageFile(tenant.storage_path, new_filename);
           
-          if (!fs.existsSync(oldPath)) {
+          if (!oldPath || !fs.existsSync(oldPath)) {
             res.writeHead(404, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: '原文件不存在' }));
             return;
           }
           
-          if (fs.existsSync(newPath)) {
+          if (newPath && fs.existsSync(newPath)) {
             res.writeHead(409, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: '目标文件名已存在' }));
             return;
@@ -1167,9 +1179,9 @@ const server = http.createServer(async (req, res) => {
             return;
           }
           
-          // 检查文件是否存在
-          const filePath = path.join(tenant.storage_path, filename);
-          if (!fs.existsSync(filePath)) {
+          // 检查文件是否存在（resolveStorageFile 防穿越）
+          const filePath = resolveStorageFile(tenant.storage_path, filename);
+          if (!filePath || !fs.existsSync(filePath)) {
             res.writeHead(404, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: '文件不存在' }));
             return;
@@ -1220,9 +1232,9 @@ const server = http.createServer(async (req, res) => {
           const body = Buffer.concat(chunks).toString();
           const { filename } = JSON.parse(body);
           
-          const filePath = path.join(tenant.storage_path, filename);
+          const filePath = resolveStorageFile(tenant.storage_path, filename);
           
-          if (!fs.existsSync(filePath)) {
+          if (!filePath || !fs.existsSync(filePath)) {
             res.writeHead(404, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: 'File not found' }));
             return;
@@ -1282,7 +1294,8 @@ const server = http.createServer(async (req, res) => {
             let sourceExists = false;
             if (src) {
               sourceName = src.name;
-              sourceExists = fs.existsSync(path.join(src.storage_path, row.filename));
+              const srcFilePath = resolveStorageFile(src.storage_path, row.filename);
+              sourceExists = !!srcFilePath && fs.existsSync(srcFilePath);
             }
             const dnRow = await new Promise((resolve) => {
               db.get('SELECT display_name FROM page_display_names WHERE tenant_id = ? AND filename = ?', [row.source_tenant_id, row.filename], (e2, r2) => resolve(r2 || null));
@@ -1350,8 +1363,8 @@ const server = http.createServer(async (req, res) => {
               return;
             }
 
-            const srcPath = path.join(src.storage_path, filename);
-            if (!fs.existsSync(srcPath)) {
+            const srcPath = resolveStorageFile(src.storage_path, filename);
+            if (!srcPath || !fs.existsSync(srcPath)) {
               res.writeHead(404, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ error: '来源文件不存在' }));
               return;
@@ -1489,9 +1502,9 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       
-      const filePath = path.join(tenant.storage_path, filename);
+      const filePath = resolveStorageFile(tenant.storage_path, filename);
       
-      if (!fs.existsSync(filePath)) {
+      if (!filePath || !fs.existsSync(filePath)) {
         res.writeHead(404, { 'Content-Type': 'text/html' });
         res.end('<h1>404 文件不存在</h1>');
         return;
