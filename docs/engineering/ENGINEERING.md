@@ -4,7 +4,7 @@
 本文由项目 Bot 随开发持续维护。架构师统筹技术方案、当前版本、基线、分支和集成记录；开发成员更新实际技术栈、运行命令、接口和数据约定；项目负责人维护版本范围、远端及发布约束。每次版本切换、方案调整、合并和发布交接时，责任成员同步更新本文并提交，交接记录文档提交 ID。方案比较与设计依据放在 docs/design/，写作要求见 [项目协作约定](../../AGENTS.md)。
 
 ## 项目背景与保护边界
-目标：多租户网页分享服务，Agent 上传 HTML 文件后可远程查看与分享。业务范围：飞书 OAuth 登录 + API_KEY 鉴权，多租户存储与数据完全隔离（每组独立 storage_path 与 API_KEY）。生产数据保护：SQLite 数据库 data/pages.db（租户、文件元数据）与 storage/ 多租户目录（文件物理隔离）；凭据（JWT_SECRET、FEISHU_APP_SECRET、API_KEY）经 .env 由宿主安全配置、不入库不提交。专用测试身份：test_bot / testbot123（主人指定，勿用个人账号）；测试使用隔离 DB 与存储目录，端口经 TEST_BASE / TEST_PORT 环境变量注入，不碰生产数据。
+目标：多租户网页分享服务，Agent 上传 HTML 文件后可远程查看与分享。业务范围：飞书 OAuth 登录 + API_KEY 鉴权，多租户存储与数据完全隔离（每组独立 storage_path 与 API_KEY）。生产数据保护：SQLite 数据库 data/pages.db（租户、文件元数据）与 storage/ 多租户目录（文件物理隔离）；JWT_SECRET、FEISHU_APP_SECRET 经 .env 配置不入库不提交，租户 API_KEY 生成后存于 tenants.api_key（入库），data/ 目录经 .gitignore 不入 git。专用测试身份：test_bot / testbot123（主人指定，勿用个人账号）；测试使用隔离 DB 与存储目录，端口经 TEST_BASE / TEST_PORT 环境变量注入，不碰生产数据。
 
 ## 技术栈与运行
 后端：Node.js（原生 http 服务），入口 services/auth-server.js，依赖 sqlite3 ^6.0.1。前端：原生 HTML/JS，web/index.html（登录页）、web/pages.html（管理页：上传/删除/列表/改名/共享）。数据库：SQLite，data/pages.db。运行：`node services/auth-server.js`；生产 systemd user service（start.sh 启动 / stop.sh 停止，开机自启）。环境变量：JWT_SECRET、PUBLIC_DOMAIN、FEISHU_APP_ID、FEISHU_APP_SECRET（见 .env.example）。
