@@ -6,3 +6,4 @@
 | --- | --- | --- |
 | 需求 #161 路径穿越加固 | [req-161-path-traversal.md](req-161-path-traversal.md) | 已实现（方案 e342222，实现 cc37b91） |
 | 需求 #162 级联清除 | [req-162-cascade-delete.md](req-162-cascade-delete.md) | 已实现（方案 9d5e526，实现 merge c7848b0） |
+| 需求 #164 共享视图主题适配 | [req-164-theme-icons.md](req-164-theme-icons.md) | 待开发实现（架构师方案） |
