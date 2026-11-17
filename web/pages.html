@@ -706,8 +706,8 @@
       document.querySelectorAll('.theme-option').forEach(el => {
         el.classList.toggle('active', el.dataset.theme === themeId);
       });
-      // 重新渲染卡片（应用新文案）
-      if (allPagesData && allPagesData.length) {
+      // 重新渲染卡片（应用新文案）；共享视图下同样按新主题刷新
+      if (currentView === 'shared' || (allPagesData && allPagesData.length)) {
         filterPages();
       }
     }
@@ -988,8 +988,8 @@
     
     async function refreshPages() {
       if (currentView === 'shared') {
-        await loadShared();
-        showToast('共享列表已刷新');
+        const ok = await loadShared();
+        showToast(ok ? '共享列表已刷新' : '共享列表刷新失败', ok ? 'success' : 'error');
         return;
       }
       await loadPages();
@@ -1777,15 +1777,17 @@
         });
         let data = {};
         try { data = await res.json(); } catch (e) { /* 非 JSON 响应按失败处理 */ }
-        if (seq !== sharedLoadingSeq || currentView !== 'shared') return;
+        if (seq !== sharedLoadingSeq || currentView !== 'shared') return false;
         if (!res.ok || !data.success || !Array.isArray(data.shares)) {
           throw new Error(data.error || ('加载共享列表失败（HTTP ' + res.status + '）'));
         }
         sharedData = data.shares;
         renderShared();
+        return true;
       } catch (err) {
-        if (seq !== sharedLoadingSeq || currentView !== 'shared') return;
+        if (seq !== sharedLoadingSeq || currentView !== 'shared') return false;
         renderSharedError(err.message);
+        return false;
       }
     }
 
