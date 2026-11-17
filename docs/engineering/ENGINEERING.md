@@ -119,11 +119,11 @@
 | 本地开发自测 | 专用测试身份 test_bot / testbot123（主人指定，勿用个人账号）；隔离 DB 与存储目录经 TEST_BASE 注入，端口经 TEST_PORT 注入 | 按任务分时占用 | 验证数据隔离，交接记录验证结果、数据归属与仍保留的测试状态 |
 
 ## codegraph 配置
-建议用户启用代码索引和工程知识图谱，供符号定位、调用关系与变更影响分析使用。安装与启用由用户选择，命令按实际工具版本核对后填写。
+代码索引和工程知识图谱已启用（用户 2026-11-17 决策），供符号定位、调用关系与变更影响分析使用。索引数据存于项目 .codegraph/ 目录（可重建，不入 git）。命令按实际工具版本核对后填写。
 
 | 启用状态 | 工具版本 | 初始化命令 | 更新命令 | 查询命令 | 最近索引提交/时间/结果 |
 |---|---|---|---|---|---|
-| 待用户选择 | 待配置 | 待配置 | 待配置 | 待配置 | 待建立 |
+| 已启用 | 0.9.9 | codegraph init | codegraph sync（增量）/ codegraph index（全量重建） | codegraph query <符号>；codegraph files；codegraph callers/callees/impact <符号> | 2026-11-17 初始索引：4 文件 88 节点 180 边（services/auth-server.js、scripts/test_shared.js、scripts/test_traversal.js、ecosystem.config.js；web/pages.html 不在索引范围） |
 
 ## 交付检查
 维护当前设计与 [踩坑记录](../PITFALLS.md)，Git 保存需求、设计、技术文档与可复用测试索引的变更历史。测试及技术调研报告、被测提交 ID、实际验证条件和未覆盖风险记录到主目录 reports 相应分类及任务记录。
