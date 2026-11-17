@@ -15,14 +15,49 @@
 ## 接口契约
 逐字段记录类型、必填性、示例值、错误码及幂等键。先对齐契约再实现。
 
+### 共享书签（需求 #160）
+
+#### 记录机制（无显式接口，服务端自动）
+登录用户访问 `/{source_tenant_id}/pages/{filename}` 且 source_tenant_id 非本人租户时，服务端自动 UPSERT 共享记录；重复打开不重复记录。
+
+#### GET /api/shared — 获取共享列表
+- 认证：X-API-Key（同 /api/list）
+- 参数：无
+- 返回：`{success: true, shares: [...]}`，shares 按 created_at 倒序
+- 元素字段：
+  - source_tenant_id: string，来源租户 ID
+  - filename: string，来源文件名
+  - display_name: string|null，来源显示名
+  - source_name: string|null，来源用户名
+  - source_exists: bool，来源文件是否存在（false=已失效）
+  - created_at: string，首次打开时间
+
+#### POST /api/shared/copy — 保存副本
+- 认证：X-API-Key
+- body：`{"source_tenant_id": "...", "filename": "..."}`
+- 成功：`{success: true, filename: "<新文件名>", url: "<新页面链接>"}`
+- 错误：400 缺参数；404 来源租户或文件不存在；403 无效 API_KEY
+
 ## 数据与事务
 记录主键、约束、索引、迁移兼容性、事务边界及隔离级别；提供备份与回滚操作。
+
+### 共享记录表 page_shares（需求 #160）
+- 字段：owner_id TEXT NOT NULL（接收租户）；source_tenant_id TEXT NOT NULL（来源租户）；filename TEXT NOT NULL；created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+- 主键：(owner_id, source_tenant_id, filename)，即幂等键，重复打开不重复记录
+- 副本命名：`{Date.now()}-{原filename}`；极端冲突（同毫秒同名）追加随机后缀，保证自动重命名可预期
+- 迁移：启动时 `CREATE TABLE IF NOT EXISTS`，幂等，无需数据迁移
 
 ## 专业阅读入口
 后端任务先读接口和数据章节；前端任务先读交互与接口章节；测试任务先读 [测试索引](../../scripts/TEST_INDEX.md)。新增专业文档后同步 [文档索引](../INDEX.md)。
 
 ## 方案与模块边界
 由 架构师在开发前维护并提交方案，登记文档路径、提交 ID、模块负责人、输入输出、依赖、异常和验收依据。设计变更记录原因、影响范围和新的提交 ID。
+
+### 需求 #160 共享书签与保存副本
+- 认定机制：接收方打开他人分享链接时自动记录（分享发生在飞书/群聊，本服务无法感知发链接时刻，只能以「打开即记录」为准）
+- 后端模块：page_shares 表 + 访问自动记录 + GET /api/shared + POST /api/shared/copy，负责人 be-dev-01
+- 前端模块：「共享」标签 + 共享列表视图 + 保存副本交互 + 失效态展示，负责人 fe-dev-02，依赖后端模块
+- 异常与边界：来源文件删除/租户失效 → 列表标记 source_exists=false 前端显示失效；副本命名用时间戳前缀自动去重
 
 ## 分支、合并与发布
 所选目录模式：`shared`。工作区约定、角色分工与交付顺序见 [项目协作约定](../../AGENTS.md)。需求、设计和技术文档在各自工作区随代码提交和合并；测试及技术调研报告在项目主目录 reports/ 中分类读写，项目主目录使用引擎注入的绝对路径，交接记录文档路径和提交 ID。
