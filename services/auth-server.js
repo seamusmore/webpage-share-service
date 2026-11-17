@@ -23,8 +23,8 @@ const BASE_URL = PUBLIC_DOMAIN ? `https://${PUBLIC_DOMAIN}` : '';
 const REDIRECT_URI = process.env.REDIRECT_URI || (BASE_URL ? `${BASE_URL}/oauth2/callback` : '');
 const STORAGE_BASE_PATH = process.env.STORAGE_BASE_PATH || path.join(__dirname, '..', 'storage');
 
-// SQLite 数据库路径
-const DB_PATH = path.join(__dirname, '..', 'data', 'pages.db');
+// SQLite 数据库路径（可用环境变量覆盖，便于隔离测试环境）
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, '..', 'data', 'pages.db');
 
 // 初始化数据库
 let db;
@@ -74,6 +74,15 @@ try {
         console.error('❌ 创建分类表失败:', err.message);
       } else {
         console.log('✅ page_categories 表已就绪');
+      }
+    });
+
+    // 共享记录表：接收方打开他人租户页面时自动记录，(owner_id, source_tenant_id, filename) 为幂等键
+    db.run('CREATE TABLE IF NOT EXISTS page_shares (owner_id TEXT NOT NULL, source_tenant_id TEXT NOT NULL, filename TEXT NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (owner_id, source_tenant_id, filename))', function(err) {
+      if (err) {
+        console.error('❌ 创建共享表失败:', err.message);
+      } else {
+        console.log('✅ page_shares 表已就绪');
       }
     });
 
@@ -229,6 +238,19 @@ function getTenantByOpenId(openId) {
       } else {
         resolve(null);
       }
+    });
+  });
+}
+
+// 获取来源租户的显示信息（name + storage_path），供共享列表与保存副本使用
+function getSourceTenantInfo(sourceTenantId) {
+  return new Promise((resolve) => {
+    db.get('SELECT name, storage_path FROM tenants WHERE tenant_id = ?', [sourceTenantId], function(err, row) {
+      if (err || !row) {
+        resolve(null);
+        return;
+      }
+      resolve({ name: row.name || null, storage_path: row.storage_path });
     });
   });
 }
@@ -1229,6 +1251,161 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     
+    // 11. API - 共享列表（需要 API_KEY）
+    if (url.pathname === '/api/shared' && req.method === 'GET') {
+      const apiKey = req.headers['x-api-key'];
+      if (!apiKey) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '缺少 API_KEY' }));
+        return;
+      }
+
+      const tenant = await getTenantByApiKey(apiKey);
+      if (!tenant) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '无效的 API_KEY' }));
+        return;
+      }
+
+      db.all('SELECT source_tenant_id, filename, created_at FROM page_shares WHERE owner_id = ? ORDER BY created_at DESC, rowid DESC', [tenant.id], async (err, rows) => {
+        if (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message }));
+          return;
+        }
+
+        try {
+          const shares = [];
+          for (const row of (rows || [])) {
+            const src = await getSourceTenantInfo(row.source_tenant_id);
+            let sourceName = null;
+            let sourceExists = false;
+            if (src) {
+              sourceName = src.name;
+              sourceExists = fs.existsSync(path.join(src.storage_path, row.filename));
+            }
+            const dnRow = await new Promise((resolve) => {
+              db.get('SELECT display_name FROM page_display_names WHERE tenant_id = ? AND filename = ?', [row.source_tenant_id, row.filename], (e2, r2) => resolve(r2 || null));
+            });
+            shares.push({
+              source_tenant_id: row.source_tenant_id,
+              filename: row.filename,
+              display_name: dnRow ? dnRow.display_name : null,
+              source_name: sourceName,
+              source_exists: sourceExists,
+              created_at: row.created_at
+            });
+          }
+
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, shares: shares }));
+        } catch (e2) {
+          console.error('❌ 读取共享列表失败:', e2);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: e2.message }));
+        }
+      });
+      return;
+    }
+
+    // 12. API - 保存副本（需要 API_KEY）
+    if (url.pathname === '/api/shared/copy' && req.method === 'POST') {
+      const apiKey = req.headers['x-api-key'];
+      if (!apiKey) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '缺少 API_KEY' }));
+        return;
+      }
+
+      const tenant = await getTenantByApiKey(apiKey);
+      if (!tenant) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '无效的 API_KEY' }));
+        return;
+      }
+
+      const chunks = [];
+      req.on('data', chunk => chunks.push(chunk));
+      req.on('end', () => {
+        try {
+          const body = JSON.parse(Buffer.concat(chunks).toString());
+          const { source_tenant_id, filename } = body;
+          if (!source_tenant_id || !filename) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: '缺少 source_tenant_id 或 filename' }));
+            return;
+          }
+
+          // 文件名格式校验（与上传校验一致，防路径穿越）
+          if (!/^[a-zA-Z0-9_\u4e00-\u9fa5\s-]+\.(html|htm)$/i.test(filename)) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: '文件名无效' }));
+            return;
+          }
+
+          getSourceTenantInfo(source_tenant_id).then((src) => {
+            if (!src) {
+              res.writeHead(404, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: '来源租户不存在' }));
+              return;
+            }
+
+            const srcPath = path.join(src.storage_path, filename);
+            if (!fs.existsSync(srcPath)) {
+              res.writeHead(404, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: '来源文件不存在' }));
+              return;
+            }
+
+            const content = fs.readFileSync(srcPath);
+
+            // 副本命名：{Date.now()}-{原filename}，极端冲突（同毫秒同名）追加随机后缀
+            let newFilename = `${Date.now()}-${filename}`;
+            let newPath = path.join(tenant.storage_path, newFilename);
+            if (fs.existsSync(newPath)) {
+              newFilename = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}-${filename}`;
+              newPath = path.join(tenant.storage_path, newFilename);
+            }
+
+            // 确保接收方存储目录存在
+            if (!fs.existsSync(tenant.storage_path)) {
+              fs.mkdirSync(tenant.storage_path, { recursive: true });
+            }
+
+            fs.writeFileSync(newPath, content);
+
+            // 建立副本元数据：显示名优先来源显示名，否则取原文件名去时间戳前缀
+            db.get('SELECT display_name FROM page_display_names WHERE tenant_id = ? AND filename = ?', [source_tenant_id, filename], (e2, dnRow) => {
+              const displayName = (dnRow && dnRow.display_name) ? dnRow.display_name : filename.replace(/^\d+-/, '');
+              db.run('INSERT OR REPLACE INTO page_display_names (tenant_id, filename, display_name, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)', [tenant.id, newFilename, displayName], (e3) => {
+                if (e3) {
+                  console.error('❌ 副本元数据写入失败:', e3.message);
+                  res.writeHead(500, { 'Content-Type': 'application/json' });
+                  res.end(JSON.stringify({ error: e3.message }));
+                  return;
+                }
+                console.log(`✅ 保存副本成功：${source_tenant_id}/${filename} -> ${tenant.id}/${newFilename}`);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                  success: true,
+                  filename: newFilename,
+                  url: BASE_URL ? `${BASE_URL}/${tenant.id}/pages/${newFilename}` : `/${tenant.id}/pages/${newFilename}`
+                }));
+              });
+            });
+          }).catch((e2) => {
+            console.error('❌ 保存副本失败:', e2);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: e2.message }));
+          });
+        } catch (err) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: '请求解析失败' }));
+        }
+      });
+      return;
+    }
+    
     // 9. 页面管理界面（JWT 验证）
     if (url.pathname === '/pages.html') {
       const jwtToken = cookies.jwt_token;
@@ -1318,6 +1495,15 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(404, { 'Content-Type': 'text/html' });
         res.end('<h1>404 文件不存在</h1>');
         return;
+      }
+      
+      // 访问他人租户页面时自动记录共享关系（幂等：同一接收方+来源+文件名只记一条）
+      if (payload.tenant_id !== tenantId) {
+        db.run('INSERT OR IGNORE INTO page_shares (owner_id, source_tenant_id, filename) VALUES (?, ?, ?)', [payload.tenant_id, tenantId, filename], function(err) {
+          if (err) {
+            console.error('❌ 记录共享关系失败:', err.message);
+          }
+        });
       }
       
       // 根据文件扩展名设置 Content-Type
