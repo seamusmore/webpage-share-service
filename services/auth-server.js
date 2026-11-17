@@ -1252,6 +1252,13 @@ const server = http.createServer(async (req, res) => {
             }
           });
           
+          // 级联清除下游共享记录（来源=当前租户，被删文件；失败仅记日志不阻断响应）
+          db.run('DELETE FROM page_shares WHERE source_tenant_id = ? AND filename = ?', [tenant.id, filename], function(err) {
+            if (err) {
+              console.error('❌ 清除下游共享记录失败:', err.message);
+            }
+          });
+          
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ success: true }));
         } catch (err) {

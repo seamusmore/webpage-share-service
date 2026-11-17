@@ -126,6 +126,19 @@ async function waitForTable(tableName, timeoutMs = 10000) {
   return false;
 }
 
+// 可靠停止被测服务：kill 后等待 'exit'，超时 SIGKILL 兜底（Windows 下 child.kill 后立即退出会遗留孤儿进程占端口）
+async function stopServer(child) {
+  if (!child || child.exitCode !== null || child.killed) return;
+  await new Promise((resolve) => {
+    const force = setTimeout(() => {
+      try { child.kill('SIGKILL'); } catch (e) {}
+      resolve();
+    }, 2000);
+    child.once('exit', () => { clearTimeout(force); resolve(); });
+    try { child.kill('SIGKILL'); } catch (e) {}
+  });
+}
+
 async function main() {
   // 清空测试数据，保证幂等重跑
   fs.rmSync(TEST_BASE, { recursive: true, force: true });
@@ -282,8 +295,56 @@ async function main() {
   const rows = await dbQuery('SELECT COUNT(*) AS c FROM page_shares WHERE owner_id = ? AND source_tenant_id = ? AND filename = ?', [TENANT_B, TENANT_A, srcFilename]);
   check('page_shares 中仅 1 条（幂等键）', rows[0].c === 1, `count=${rows[0].c}`);
 
+  // 16. 级联清除：A 经 /api/delete 删除文件后，下游 page_shares 记录被同步清除
+  // 16a. A 上传级联测试文件，B 打开产生共享记录（经 /api/shared 读 created_at，服务端单连接串行化避免与 INSERT 竞态）
+  const form2 = new FormData();
+  form2.append('file', new Blob([htmlContent], { type: 'text/html' }), 'cascade-test.html');
+  const up2Resp = await fetch(`${BASE_URL}/api/upload`, {
+    method: 'POST', headers: { 'X-API-Key': API_KEY_A }, body: form2
+  });
+  const up2 = await up2Resp.json();
+  check('A 上传级联测试文件成功', up2Resp.status === 200 && up2.success === true, JSON.stringify(up2));
+  const delFilename = up2.filename;
+  await fetch(`${BASE_URL}/${TENANT_A}/pages/${delFilename}`, { headers: { Cookie: `jwt_token=${jwtB}` } });
+  const listBeforeDelResp = await fetch(`${BASE_URL}/api/shared`, { headers: { 'X-API-Key': API_KEY_B } });
+  const listBeforeDelJson = await listBeforeDelResp.json();
+  const delShareEntry = (listBeforeDelJson.shares || []).find((s) => s.filename === delFilename);
+  check('级联测试：B 打开后 /api/shared 有该条目', !!delShareEntry, JSON.stringify(listBeforeDelJson.shares));
+  const oldCreatedAt = delShareEntry ? delShareEntry.created_at : null;
+
+  // 16b. A 经 /api/delete 删除 → page_shares 级联清除
+  const delApi = await fetch(`${BASE_URL}/api/delete`, {
+    method: 'POST', headers: { 'X-API-Key': API_KEY_A, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ filename: delFilename })
+  });
+  const delApiJson = await delApi.json();
+  check('A /api/delete 返回 success', delApi.status === 200 && delApiJson.success === true, JSON.stringify(delApiJson));
+  const listAfterDelResp = await fetch(`${BASE_URL}/api/shared`, { headers: { 'X-API-Key': API_KEY_B } });
+  const listAfterDelJson = await listAfterDelResp.json();
+  check('级联清除：B /api/shared 不再返回该条目', !(listAfterDelJson.shares || []).some((s) => s.filename === delFilename), JSON.stringify(listAfterDelJson.shares));
+  const afterDelRows = await dbQuery('SELECT COUNT(*) AS c FROM page_shares WHERE owner_id = ? AND source_tenant_id = ? AND filename = ?', [TENANT_B, TENANT_A, delFilename]);
+  check('级联清除：page_shares 记录已清除（COUNT=0）', afterDelRows[0].c === 0, `count=${afterDelRows[0].c}`);
+
+  // 17. 同名重传后接收方再打开 → 新记录 created_at 最新（区别于旧记录）
+  await new Promise((r) => setTimeout(r, 1100)); // 保证 created_at 跨秒，避免同秒比较
+  const form3 = new FormData();
+  form3.append('file', new Blob([htmlContent], { type: 'text/html' }), 'cascade-test.html');
+  const up3Resp = await fetch(`${BASE_URL}/api/upload`, {
+    method: 'POST', headers: { 'X-API-Key': API_KEY_A }, body: form3
+  });
+  const up3 = await up3Resp.json();
+  check('A 同名重传成功', up3Resp.status === 200 && up3.success === true, JSON.stringify(up3));
+  const reFilename = up3.filename;
+  await fetch(`${BASE_URL}/${TENANT_A}/pages/${reFilename}`, { headers: { Cookie: `jwt_token=${jwtB}` } });
+  const listAfterReResp = await fetch(`${BASE_URL}/api/shared`, { headers: { 'X-API-Key': API_KEY_B } });
+  const listAfterReJson = await listAfterReResp.json();
+  const reShareEntry = (listAfterReJson.shares || []).find((s) => s.filename === reFilename);
+  check('同名重传后 /api/shared 新条目 1 条', !!reShareEntry, JSON.stringify(listAfterReJson.shares));
+  const newCreatedAt = reShareEntry ? reShareEntry.created_at : null;
+  check('新记录 created_at 最新（> 旧记录）', !!(oldCreatedAt && newCreatedAt && newCreatedAt > oldCreatedAt), `old=${oldCreatedAt} new=${newCreatedAt}`);
+
   // 汇总
-  child.kill();
+  await stopServer(child);
   console.log(`\n=== 结果：通过 ${passCount} 项，失败 ${failCount} 项 ===`);
   if (failCount > 0) {
     console.log('失败项：', failures.join('；'));

@@ -123,6 +123,19 @@ async function waitForTable(tableName, timeoutMs = 10000) {
   return false;
 }
 
+// 可靠停止被测服务：kill 后等待 'exit'，超时 SIGKILL 兜底（Windows 下 child.kill 后立即退出会遗留孤儿进程占端口）
+async function stopServer(child) {
+  if (!child || child.exitCode !== null || child.killed) return;
+  await new Promise((resolve) => {
+    const force = setTimeout(() => {
+      try { child.kill('SIGKILL'); } catch (e) {}
+      resolve();
+    }, 2000);
+    child.once('exit', () => { clearTimeout(force); resolve(); });
+    try { child.kill('SIGKILL'); } catch (e) {}
+  });
+}
+
 async function main() {
   fs.rmSync(TEST_BASE, { recursive: true, force: true });
   fs.mkdirSync(STORAGE_PATH, { recursive: true });
@@ -256,7 +269,7 @@ async function main() {
   check('合法文件 delete 200', delOk.status === 200 && delOkJson.success === true, `status=${delOk.status}`);
 
   // 汇总
-  child.kill();
+  await stopServer(child);
   console.log(`\n=== 结果：通过 ${passCount} 项，失败 ${failCount} 项 ===`);
   if (failCount > 0) {
     console.log('失败项：', failures.join('；'));
