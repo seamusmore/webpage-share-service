@@ -4,5 +4,5 @@
 
 | 主题或需求 | 文档 | 采用版本与状态 |
 | --- | --- | --- |
-| 需求 #161 路径穿越加固 | [req-161-path-traversal.md](req-161-path-traversal.md) | 待开发实现（架构师方案） |
-| 需求 #162 级联清除 | [req-162-cascade-delete.md](req-162-cascade-delete.md) | 待开发实现（架构师方案） |
+| 需求 #161 路径穿越加固 | [req-161-path-traversal.md](req-161-path-traversal.md) | 已实现（方案 e342222，实现 cc37b91） |
+| 需求 #162 级联清除 | [req-162-cascade-delete.md](req-162-cascade-delete.md) | 已实现（方案 9d5e526，实现 merge c7848b0） |
