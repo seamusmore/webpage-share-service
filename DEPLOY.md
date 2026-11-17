@@ -61,13 +61,7 @@ source .env
 node services/auth-server.js
 ```
 
-### 方式二：PM2
-
-```bash
-pm2 start ecosystem.config.js
-```
-
-### 方式三：systemd（推荐生产环境）
+### 方式二：systemd（推荐生产环境）
 
 创建 `/etc/systemd/system/webpage-share.service`：
 
@@ -156,16 +150,6 @@ sudo systemctl restart webpage-share
 sudo systemctl status webpage-share
 ```
 
-### 管理命令（PM2）
-
-```bash
-pm2 start ecosystem.config.js
-pm2 stop webpage-share
-pm2 restart webpage-share
-pm2 logs webpage-share
-pm2 monit
-```
-
 ---
 
 ## 故障排查
@@ -180,20 +164,4 @@ pm2 monit
 
 ---
 
-## 回滚
-
-如果 systemd 方式有问题，回滚到 PM2：
-
-```bash
-sudo systemctl stop webpage-share
-sudo systemctl disable webpage-share
-sudo rm /etc/systemd/system/webpage-share.service
-sudo systemctl daemon-reload
-
-cd /path/to/webpage-share-service
-pm2 start ecosystem.config.js
-```
-
----
-
-**版本**: 2.0.0
+**版本**: 2.2.0
