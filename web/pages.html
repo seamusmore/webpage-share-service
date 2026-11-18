@@ -1056,12 +1056,21 @@
           },
           body: formData
         });
-        const data = await res.json();
-        if (data.success) {
-          showToast('上传成功：' + file.name);
-          loadPages();
+        const ct = res.headers.get('content-type') || '';
+        if (!res.ok || !ct.includes('application/json')) {
+          if (res.status === 413) {
+            showToast('上传失败：文件超过大小限制', 'error');
+          } else {
+            showToast('上传失败：服务暂时不可用，请稍后重试', 'error');
+          }
         } else {
-          showToast('上传失败：' + data.error, 'error');
+          const data = await res.json();
+          if (data.success) {
+            showToast('上传成功：' + file.name);
+            loadPages();
+          } else {
+            showToast('上传失败：' + data.error, 'error');
+          }
         }
       } catch (err) {
         showToast('上传失败：' + err.message, 'error');
